@@ -1,0 +1,14 @@
+import { Card } from "@/components/ui/card"
+
+interface Profile {
+  bio: string
+}
+
+export function ProfileAbout({ profile }: { profile: Profile }) {
+  return (
+    <Card className="p-6">
+      <h2 className="text-2xl font-bold mb-4">About</h2>
+      <p className="text-muted-foreground leading-relaxed">{profile.bio}</p>
+    </Card>
+  )
+}

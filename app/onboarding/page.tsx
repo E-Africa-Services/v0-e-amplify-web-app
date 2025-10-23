@@ -8,15 +8,21 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { ArrowRight, ArrowLeft, Check, Sparkles } from "lucide-react"
 import Link from "next/link"
+import { signUp } from "@/lib/auth-actions"
+import { useRouter } from "next/navigation"
 
 type UserGoal = "learn" | "teach" | "collaborate" | null
 
 export default function OnboardingPage() {
   const [step, setStep] = useState(1)
   const [goal, setGoal] = useState<UserGoal>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
+  const router = useRouter()
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    password: "",
     skills: "",
     teachTopics: "",
     learnTopics: "",
@@ -34,11 +40,19 @@ export default function OnboardingPage() {
     if (step > 1) setStep(step - 1)
   }
 
-  const handleComplete = () => {
-    // In a real app, this would save to database
-    console.log("Onboarding complete:", { goal, ...formData })
-    // Redirect to dashboard
-    window.location.href = "/dashboard"
+  const handleComplete = async () => {
+    setError("")
+    setIsLoading(true)
+
+    const result = await signUp(formData.email, formData.password, formData.name)
+
+    if (result?.error) {
+      setError(result.error)
+      setIsLoading(false)
+    } else {
+      // Redirect to dashboard after successful signup
+      router.push("/dashboard")
+    }
   }
 
   return (
@@ -76,6 +90,8 @@ export default function OnboardingPage() {
             Step {step} of {totalSteps}
           </p>
         </div>
+
+        {error && <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>}
 
         {/* Step Content */}
         <Card className="p-8">
@@ -153,6 +169,7 @@ export default function OnboardingPage() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="mt-1.5"
+                    disabled={isLoading}
                   />
                 </div>
 
@@ -165,6 +182,20 @@ export default function OnboardingPage() {
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="mt-1.5"
+                    disabled={isLoading}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Create a strong password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="mt-1.5"
+                    disabled={isLoading}
                   />
                 </div>
 
@@ -176,6 +207,7 @@ export default function OnboardingPage() {
                     value={formData.skills}
                     onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
                     className="mt-1.5"
+                    disabled={isLoading}
                   />
                   <p className="text-xs text-muted-foreground mt-1">Separate multiple skills with commas</p>
                 </div>
@@ -201,6 +233,7 @@ export default function OnboardingPage() {
                       value={formData.teachTopics}
                       onChange={(e) => setFormData({ ...formData, teachTopics: e.target.value })}
                       className="mt-1.5 min-h-24"
+                      disabled={isLoading}
                     />
                   </div>
                 )}
@@ -214,6 +247,7 @@ export default function OnboardingPage() {
                       value={formData.learnTopics}
                       onChange={(e) => setFormData({ ...formData, learnTopics: e.target.value })}
                       className="mt-1.5 min-h-24"
+                      disabled={isLoading}
                     />
                   </div>
                 )}
@@ -226,6 +260,7 @@ export default function OnboardingPage() {
                     value={formData.whyHere}
                     onChange={(e) => setFormData({ ...formData, whyHere: e.target.value })}
                     className="mt-1.5 min-h-24"
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -293,20 +328,20 @@ export default function OnboardingPage() {
 
           {/* Navigation Buttons */}
           <div className="flex justify-between mt-8 pt-6 border-t border-border">
-            <Button variant="ghost" onClick={handleBack} disabled={step === 1} className="rounded-full">
+            <Button variant="ghost" onClick={handleBack} disabled={step === 1 || isLoading} className="rounded-full">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </Button>
 
             {step < totalSteps ? (
-              <Button onClick={handleNext} disabled={step === 1 && !goal} className="rounded-full">
+              <Button onClick={handleNext} disabled={(step === 1 && !goal) || isLoading} className="rounded-full">
                 Continue
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             ) : (
-              <Button onClick={handleComplete} className="rounded-full">
-                Complete Setup
-                <Check className="w-4 h-4 ml-2" />
+              <Button onClick={handleComplete} disabled={isLoading} className="rounded-full">
+                {isLoading ? "Creating account..." : "Complete Setup"}
+                {!isLoading && <Check className="w-4 h-4 ml-2" />}
               </Button>
             )}
           </div>

@@ -2,6 +2,7 @@ import { FeedNavbar } from "@/components/feed-navbar"
 import { CreatePost } from "@/components/create-post"
 import { FeedPost } from "@/components/feed-post"
 import { FeedSidebar } from "@/components/feed-sidebar"
+import { ProtectedRoute } from "@/components/protected-route"
 
 // Mock data - in real app this would come from database
 const mockPosts = [
@@ -54,33 +55,35 @@ const mockPosts = [
 
 export default function FeedPage() {
   return (
-    <div className="min-h-screen bg-background">
-      <FeedNavbar />
+    <ProtectedRoute>
+      <div className="min-h-screen bg-background">
+        <FeedNavbar />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-12">
-        <div className="grid lg:grid-cols-12 gap-6">
-          {/* Main Feed */}
-          <div className="lg:col-span-8 space-y-6">
-            <CreatePost />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-12">
+          <div className="grid lg:grid-cols-12 gap-6">
+            {/* Main Feed */}
+            <div className="lg:col-span-8 space-y-6">
+              <CreatePost />
 
-            <div className="space-y-4">
-              {mockPosts.map((post) => (
-                <FeedPost key={post.id} post={post} />
-              ))}
+              <div className="space-y-4">
+                {mockPosts.map((post) => (
+                  <FeedPost key={post.id} post={post} />
+                ))}
+              </div>
+
+              {/* Load more */}
+              <div className="text-center py-8">
+                <p className="text-sm text-muted-foreground">You've reached the end of your feed</p>
+              </div>
             </div>
 
-            {/* Load more */}
-            <div className="text-center py-8">
-              <p className="text-sm text-muted-foreground">You've reached the end of your feed</p>
+            {/* Sidebar */}
+            <div className="lg:col-span-4">
+              <FeedSidebar />
             </div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="lg:col-span-4">
-            <FeedSidebar />
           </div>
         </div>
       </div>
-    </div>
+    </ProtectedRoute>
   )
 }

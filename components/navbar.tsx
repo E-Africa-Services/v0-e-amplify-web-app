@@ -4,9 +4,11 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Menu } from "lucide-react"
 import { useState } from "react"
+import { useAuth } from "@/lib/auth-context"
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const { user, loading } = useAuth()
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
@@ -44,12 +46,20 @@ export function Navbar() {
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center gap-3">
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/login">Log In</Link>
-            </Button>
-            <Button size="sm" className="rounded-full" asChild>
-              <Link href="/onboarding">Get Started</Link>
-            </Button>
+            {!loading && !user ? (
+              <>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href="/login">Log In</Link>
+                </Button>
+                <Button size="sm" className="rounded-full" asChild>
+                  <Link href="/onboarding">Get Started</Link>
+                </Button>
+              </>
+            ) : (
+              <Button size="sm" className="rounded-full" asChild>
+                <Link href="/dashboard">Dashboard</Link>
+              </Button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -77,12 +87,20 @@ export function Navbar() {
               Stories
             </Link>
             <div className="flex flex-col gap-2 pt-2">
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/login">Log In</Link>
-              </Button>
-              <Button size="sm" className="rounded-full" asChild>
-                <Link href="/onboarding">Get Started</Link>
-              </Button>
+              {!loading && !user ? (
+                <>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link href="/login">Log In</Link>
+                  </Button>
+                  <Button size="sm" className="rounded-full" asChild>
+                    <Link href="/onboarding">Get Started</Link>
+                  </Button>
+                </>
+              ) : (
+                <Button size="sm" className="rounded-full" asChild>
+                  <Link href="/dashboard">Dashboard</Link>
+                </Button>
+              )}
             </div>
           </div>
         )}

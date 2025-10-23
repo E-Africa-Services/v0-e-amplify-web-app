@@ -3,15 +3,23 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Bell, Search, Menu } from "lucide-react"
+import { Bell, Search, Menu, LogOut } from "lucide-react"
 import { useState } from "react"
 import { usePathname } from "next/navigation"
+import { useAuth } from "@/lib/auth-context"
+import { signOut } from "@/lib/auth-actions"
 
 export function FeedNavbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [showUserMenu, setShowUserMenu] = useState(false)
   const pathname = usePathname()
+  const { user } = useAuth()
 
   const isActive = (path: string) => pathname === path
+
+  const handleLogout = async () => {
+    await signOut()
+  }
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
@@ -74,8 +82,39 @@ export function FeedNavbar() {
               <span className="absolute top-1 right-1 w-2 h-2 bg-secondary rounded-full" />
             </Button>
 
-            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center cursor-pointer">
-              <span className="text-sm font-semibold text-primary">SC</span>
+            <div className="relative">
+              <button
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center cursor-pointer hover:bg-primary/30 transition-colors"
+              >
+                <span className="text-sm font-semibold text-primary">
+                  {user?.email?.charAt(0).toUpperCase() || "U"}
+                </span>
+              </button>
+
+              {showUserMenu && (
+                <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-lg shadow-lg py-2 z-50">
+                  <Link
+                    href={`/profile/${user?.id}`}
+                    className="block px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                  >
+                    View Profile
+                  </Link>
+                  <Link
+                    href="/settings"
+                    className="block px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                  >
+                    Settings
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors flex items-center gap-2"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Logout
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -110,6 +149,13 @@ export function FeedNavbar() {
             >
               Dashboard
             </Link>
+            <button
+              onClick={handleLogout}
+              className="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors flex items-center gap-2"
+            >
+              <LogOut className="w-4 h-4" />
+              Logout
+            </button>
           </div>
         )}
       </div>

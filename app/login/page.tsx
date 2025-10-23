@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,22 +8,28 @@ import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import Link from "next/link"
 import { ArrowRight, Mail, Lock } from "lucide-react"
+import { signIn } from "@/lib/auth-actions"
+import { useRouter } from "next/navigation"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
+  const router = useRouter()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError("")
     setIsLoading(true)
 
-    // Simulate login - in real app, this would call authentication API
-    setTimeout(() => {
-      console.log("Login:", { email, password })
+    const result = await signIn(email, password)
+
+    if (result?.error) {
+      setError(result.error)
       setIsLoading(false)
-      window.location.href = "/feed"
-    }, 1000)
+    }
+    // If successful, signIn redirects to /feed
   }
 
   return (
@@ -50,6 +55,8 @@ export default function LoginPage() {
             <p className="text-muted-foreground">Sign in to continue your growth journey</p>
           </div>
 
+          {error && <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>}
+
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <Label htmlFor="email">Email</Label>
@@ -63,6 +70,7 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10"
                   required
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -79,13 +87,14 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10"
                   required
+                  disabled={isLoading}
                 />
               </div>
             </div>
 
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" className="rounded border-border" />
+                <input type="checkbox" className="rounded border-border" disabled={isLoading} />
                 <span className="text-sm text-muted-foreground">Remember me</span>
               </label>
               <Link href="/forgot-password" className="text-sm text-primary hover:underline">

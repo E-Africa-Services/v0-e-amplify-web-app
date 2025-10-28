@@ -1,10 +1,10 @@
 "use server"
 
-import { createServerSupabaseClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 
 export async function signUp(email: string, password: string, fullName: string) {
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createClient()
 
   const { error } = await supabase.auth.signUp({
     email,
@@ -27,7 +27,7 @@ export async function signUp(email: string, password: string, fullName: string) 
 }
 
 export async function signIn(email: string, password: string) {
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createClient()
 
   const { error } = await supabase.auth.signInWithPassword({
     email,
@@ -42,13 +42,13 @@ export async function signIn(email: string, password: string) {
 }
 
 export async function signOut() {
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createClient()
   await supabase.auth.signOut()
   redirect("/")
 }
 
 export async function getCurrentUser() {
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -57,7 +57,7 @@ export async function getCurrentUser() {
 }
 
 export async function requestPasswordReset(email: string) {
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createClient()
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo:
@@ -73,7 +73,7 @@ export async function requestPasswordReset(email: string) {
 }
 
 export async function updatePassword(newPassword: string) {
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createClient()
 
   const { error } = await supabase.auth.updateUser({
     password: newPassword,

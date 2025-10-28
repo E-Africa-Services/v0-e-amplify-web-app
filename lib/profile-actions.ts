@@ -1,9 +1,9 @@
 "use server"
 
-import { createServerSupabaseClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/server"
 
 export async function getUserProfile(userId: string) {
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createClient()
 
   const { data, error } = await supabase.from("users").select("*").eq("id", userId).single()
 
@@ -26,7 +26,7 @@ export async function updateUserProfile(
     roles?: string[]
   },
 ) {
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createClient()
 
   const { data, error } = await supabase.from("users").update(updates).eq("id", userId).select().single()
 
@@ -38,7 +38,7 @@ export async function updateUserProfile(
 }
 
 export async function getCurrentUserProfile() {
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createClient()
 
   const {
     data: { user },

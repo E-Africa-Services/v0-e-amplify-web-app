@@ -6,7 +6,7 @@ import { redirect } from "next/navigation"
 export async function signUp(email: string, password: string, fullName: string) {
   const supabase = await createClient()
 
-  const { error } = await supabase.auth.signUp({
+  const { data: authData, error: authError } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -19,8 +19,23 @@ export async function signUp(email: string, password: string, fullName: string) 
     },
   })
 
-  if (error) {
-    return { error: error.message }
+  if (authError) {
+    return { error: authError.message }
+  }
+
+  if (authData.user) {
+    const { error: profileError } = await supabase.from("users").insert({
+      id: authData.user.id,
+      email: email,
+      name: fullName,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+
+    if (profileError) {
+      console.error("Error creating user profile:", profileError)
+      // Don't return error here as auth user was created successfully
+    }
   }
 
   return { success: true }

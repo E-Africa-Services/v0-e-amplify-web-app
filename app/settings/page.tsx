@@ -35,9 +35,10 @@ export default function SettingsPage() {
 
   const loadUserProfile = async () => {
     setIsLoading(true)
+    setError("")
     const supabase = createClient()
 
-    const { data, error } = await supabase.from("users").select("*").eq("id", user?.id).single()
+    const { data, error } = await supabase.from("users").select("*").eq("id", user?.id).maybeSingle()
 
     if (error) {
       setError("Failed to load profile")
@@ -48,6 +49,25 @@ export default function SettingsPage() {
         location: data.location || "",
         skills: Array.isArray(data.skills) ? data.skills.join(", ") : "",
       })
+    } else {
+      if (user) {
+        const { error: createError } = await supabase.from("users").insert({
+          id: user.id,
+          email: user.email,
+          name: user.user_metadata?.name || "",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+
+        if (!createError) {
+          setFormData({
+            name: user.user_metadata?.name || "",
+            bio: "",
+            location: "",
+            skills: "",
+          })
+        }
+      }
     }
     setIsLoading(false)
   }
@@ -63,7 +83,10 @@ export default function SettingsPage() {
       name: formData.name,
       bio: formData.bio,
       location: formData.location,
-      skills: formData.skills.split(",").map((s) => s.trim()),
+      skills: formData.skills
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => s),
     })
 
     if (result.error) {

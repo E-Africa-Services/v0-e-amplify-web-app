@@ -21,7 +21,7 @@ export default function SettingsPage() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [formData, setFormData] = useState({
-    full_name: "",
+    name: "",
     bio: "",
     location: "",
     skills: "",
@@ -43,7 +43,7 @@ export default function SettingsPage() {
       setError("Failed to load profile")
     } else if (data) {
       setFormData({
-        full_name: data.full_name || "",
+        name: data.name || "",
         bio: data.bio || "",
         location: data.location || "",
         skills: Array.isArray(data.skills) ? data.skills.join(", ") : "",
@@ -60,7 +60,7 @@ export default function SettingsPage() {
     setSuccess("")
 
     const result = await updateUserProfile(user.id, {
-      full_name: formData.full_name,
+      name: formData.name,
       bio: formData.bio,
       location: formData.location,
       skills: formData.skills.split(",").map((s) => s.trim()),
@@ -115,12 +115,12 @@ export default function SettingsPage() {
                     </div>
 
                     <div>
-                      <Label htmlFor="full_name">Full Name</Label>
+                      <Label htmlFor="name">Full Name</Label>
                       <Input
-                        id="full_name"
+                        id="name"
                         placeholder="Enter your full name"
-                        value={formData.full_name}
-                        onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         className="mt-1.5"
                         disabled={isSaving}
                       />

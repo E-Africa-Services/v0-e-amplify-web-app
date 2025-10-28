@@ -17,7 +17,7 @@ export async function getUserProfile(userId: string) {
 export async function updateUserProfile(
   userId: string,
   updates: {
-    full_name?: string
+    name?: string
     bio?: string
     avatar_url?: string
     cover_image_url?: string

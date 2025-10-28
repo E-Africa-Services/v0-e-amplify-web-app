@@ -11,7 +11,7 @@ export async function signUp(email: string, password: string, fullName: string) 
     password,
     options: {
       data: {
-        full_name: fullName,
+        name: fullName,
       },
       emailRedirectTo:
         process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||

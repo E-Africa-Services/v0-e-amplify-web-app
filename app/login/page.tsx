@@ -10,6 +10,8 @@ import Link from "next/link"
 import { ArrowRight, Mail, Lock } from "lucide-react"
 import { signIn } from "@/lib/auth-actions"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth-context"
+import { useEffect } from "react"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -17,6 +19,25 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
+  const { user, loading } = useAuth()
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.push("/dashboard")
+    }
+  }, [user, loading, router])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    )
+  }
+
+  if (user) {
+    return null
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()

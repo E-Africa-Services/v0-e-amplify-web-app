@@ -21,7 +21,14 @@ export async function updateSession(request: NextRequest) {
     },
   )
 
-  await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  // Redirect authenticated users trying to access login/signup pages
+  if (user && (request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/onboarding")) {
+    return NextResponse.redirect(new URL("/dashboard", request.url))
+  }
 
   return supabaseResponse
 }

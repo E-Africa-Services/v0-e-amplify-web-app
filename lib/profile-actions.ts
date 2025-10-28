@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server"
 export async function getUserProfile(userId: string) {
   const supabase = await createClient()
 
-  const { data, error } = await supabase.from("users").select("*").eq("id", userId).single()
+  const { data, error } = await supabase.from("users").select("*").eq("id", userId).maybeSingle()
 
   if (error) {
     return { error: error.message }
@@ -28,7 +28,18 @@ export async function updateUserProfile(
 ) {
   const supabase = await createClient()
 
-  const { data, error } = await supabase.from("users").update(updates).eq("id", userId).select().single()
+  const { data, error } = await supabase
+    .from("users")
+    .upsert(
+      {
+        id: userId,
+        ...updates,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "id" },
+    )
+    .select()
+    .single()
 
   if (error) {
     return { error: error.message }

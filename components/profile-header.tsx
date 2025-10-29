@@ -18,9 +18,16 @@ interface Profile {
 
 export function ProfileHeader({ profile }: { profile: Profile }) {
   // Format the joined date
-  const joinedDate = profile.created_at 
-    ? new Date(profile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-    : 'Recently'
+  const joinedDate = (() => {
+    if (!profile.created_at) return 'Recently'
+    try {
+      const date = new Date(profile.created_at)
+      if (isNaN(date.getTime())) return 'Recently'
+      return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    } catch {
+      return 'Recently'
+    }
+  })()
 
   return (
     <div className="relative">
@@ -41,7 +48,7 @@ export function ProfileHeader({ profile }: { profile: Profile }) {
                   className="w-full h-full rounded-3xl object-cover"
                 />
               ) : (
-                profile.name.charAt(0).toUpperCase()
+                profile.name.charAt(0).toUpperCase() || '?'
               )}
             </div>
 

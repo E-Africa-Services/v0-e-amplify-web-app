@@ -50,8 +50,6 @@ export default function OnboardingPage() {
       formData.name,
       goal || undefined,
       formData.skills,
-      formData.teachTopics,
-      formData.learnTopics,
       formData.whyHere
     )
 

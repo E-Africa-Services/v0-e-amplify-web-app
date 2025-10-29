@@ -49,7 +49,7 @@ If you keep seeing this error:
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
    ```
 4. **Restart dev server**: `pnpm dev`
-5. **Clear .next cache**: 
+5. **Clear .next cache**:
    ```bash
    rm -rf .next
    pnpm dev
@@ -61,13 +61,15 @@ The middleware now uses this pattern:
 
 ```typescript
 try {
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   // Handle redirects...
 } catch (error) {
   // Log but don't block the request
-  console.error("Middleware auth check error:", error)
+  console.error("Middleware auth check error:", error);
 }
-return supabaseResponse // Always return, even on error
+return supabaseResponse; // Always return, even on error
 ```
 
 This ensures the app remains functional even when Supabase connectivity is temporarily unavailable.

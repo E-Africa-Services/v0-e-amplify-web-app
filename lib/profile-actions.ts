@@ -26,22 +26,38 @@ export async function getUserProfile(userId: string) {
     .select("skill_name")
     .eq("profile_id", profile.id)
 
+  if (skillsError) {
+    return { error: skillsError.message }
+  }
+
   // Get stats (sessions count, etc)
-  const { data: mentorSessions } = await supabase
+  const { data: mentorSessions, error: mentorError } = await supabase
     .from("sessions")
     .select("id")
     .eq("mentor_id", profile.id)
 
-  const { data: menteeSessions } = await supabase
+  if (mentorError) {
+    return { error: mentorError.message }
+  }
+
+  const { data: menteeSessions, error: menteeError } = await supabase
     .from("sessions")
     .select("id")
     .eq("mentee_id", profile.id)
 
-  const { data: credits } = await supabase
+  if (menteeError) {
+    return { error: menteeError.message }
+  }
+
+  const { data: credits, error: creditsError } = await supabase
     .from("credits")
     .select("balance")
     .eq("user_id", userId)
     .maybeSingle()
+
+  if (creditsError) {
+    return { error: creditsError.message }
+  }
 
   // Combine all data
   return {
@@ -104,7 +120,14 @@ export async function updateUserProfile(
   // Update skills if provided
   if (skills && Array.isArray(skills)) {
     // Delete existing skills
-    await supabase.from("skills").delete().eq("profile_id", profile.id)
+    const { error: deleteError } = await supabase
+      .from("skills")
+      .delete()
+      .eq("profile_id", profile.id)
+
+    if (deleteError) {
+      return { error: deleteError.message }
+    }
 
     // Insert new skills
     if (skills.length > 0) {

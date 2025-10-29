@@ -5,12 +5,12 @@
 DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
 CREATE POLICY "Users can insert own profile"
   ON profiles FOR INSERT
-  WITH CHECK (true);
+  WITH CHECK (auth.uid() = user_id);
 
 DROP POLICY IF EXISTS "Users can insert own credits" ON credits;
 CREATE POLICY "Users can insert own credits"
   ON credits FOR INSERT
-  WITH CHECK (true);
+  WITH CHECK (auth.uid() = user_id);
 
 -- Recreate the trigger function with better error handling
 CREATE OR REPLACE FUNCTION public.handle_new_user()
@@ -37,6 +37,8 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Now create profiles for existing users
+BEGIN;
+
 INSERT INTO public.profiles (user_id, name, email)
 SELECT 
   au.id,
@@ -44,7 +46,8 @@ SELECT
   au.email
 FROM auth.users au
 LEFT JOIN public.profiles p ON p.user_id = au.id
-WHERE p.id IS NULL;
+WHERE p.id IS NULL
+ON CONFLICT (user_id) DO NOTHING;
 
 INSERT INTO public.credits (user_id, balance)
 SELECT 
@@ -52,7 +55,10 @@ SELECT
   100
 FROM auth.users au
 LEFT JOIN public.credits c ON c.user_id = au.id
-WHERE c.id IS NULL;
+WHERE c.id IS NULL
+ON CONFLICT (user_id) DO NOTHING;
+
+COMMIT;
 
 -- Show success
 SELECT 

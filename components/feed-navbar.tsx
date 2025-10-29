@@ -17,8 +17,17 @@ export function FeedNavbar() {
   const isActive = (path: string) => pathname === path
 
   const handleLogout = async () => {
-    await signOut()
-    setShowUserMenu(false)
+    try {
+      await signOut()
+    } catch (error) {
+      console.error("Logout failed:", error)
+      // Surface user feedback about the failure
+      alert("Failed to log out. Please try again.")
+    } finally {
+      // Always close menus regardless of outcome
+      setShowUserMenu(false)
+      setMobileMenuOpen(false)
+    }
   }
 
   return (

@@ -86,7 +86,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       return { error: null }
     } catch (error) {
-      return { error: error as AuthError }
+      return { 
+        error: {
+          message: error instanceof Error ? error.message : 'An unexpected error occurred',
+          status: 500,
+        } as AuthError
+      }
     }
   }
 
@@ -126,7 +131,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const {
         data: { session },
-      } = await supabase.auth.getSession()
+      } = await supabase.auth.refreshSession()
       setSession(session)
       setUser(session?.user ?? null)
     } catch (error) {

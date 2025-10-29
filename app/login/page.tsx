@@ -25,7 +25,8 @@ export default function LoginPage() {
     if (searchParams.get('signup') === 'success') {
       setShowSuccess(true)
       // Hide success message after 5 seconds
-      setTimeout(() => setShowSuccess(false), 5000)
+      const timer = setTimeout(() => setShowSuccess(false), 5000)
+      return () => clearTimeout(timer)
     }
   }, [searchParams])
 

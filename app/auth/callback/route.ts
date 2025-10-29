@@ -2,13 +2,32 @@ import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
+  const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get("code")
+  const next = searchParams.get("next") ?? "/dashboard"
 
   if (code) {
     const supabase = await createClient()
-    await supabase.auth.exchangeCodeForSession(code)
+    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    
+    if (!error) {
+      // Check if this is a password recovery flow
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (user) {
+        // If the user is recovering password, redirect to reset-password page
+        const forwardedHost = request.headers.get("x-forwarded-host")
+        const isLocalEnv = process.env.NODE_ENV === "development"
+        
+        if (forwardedHost) {
+          return NextResponse.redirect(`${isLocalEnv ? "http" : "https"}://${forwardedHost}${next}`)
+        } else {
+          return NextResponse.redirect(`${origin}${next}`)
+        }
+      }
+    }
   }
 
-  return NextResponse.redirect(new URL("/feed", request.url))
+  // If no code or error, redirect to home
+  return NextResponse.redirect(`${origin}/`)
 }

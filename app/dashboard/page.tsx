@@ -19,7 +19,9 @@ export default async function DashboardPage() {
   const statsResult = await getDashboardStats(user.id)
 
   // Check if database tables are not set up yet
-  if (statsResult.error && statsResult.error.includes("Could not find the table")) {
+  if (statsResult.error && typeof statsResult.error === 'string' && 
+      (statsResult.error.includes("Could not find the table") || 
+       statsResult.error.includes("relation") && statsResult.error.includes("does not exist"))) {
     return (
       <ProtectedRoute>
         <div className="min-h-screen bg-background">
@@ -33,15 +35,12 @@ export default async function DashboardPage() {
               <div className="bg-card border border-border rounded-lg p-6 text-left mb-6">
                 <h2 className="font-semibold mb-3">Quick Setup Steps:</h2>
                 <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
-                  <li>Open Supabase Dashboard: <a href="https://supabase.com/dashboard/project/zwgbyazovphrgvaapysv/sql" target="_blank" className="text-primary underline">SQL Editor</a></li>
+                  <li>Open Supabase Dashboard: <a href={`https://supabase.com/dashboard/project/${process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID}/sql`} target="_blank" rel="noopener noreferrer" className="text-primary underline">SQL Editor</a></li>
                   <li>Copy the contents of <code className="bg-muted px-2 py-1 rounded">/supabase/URGENT_RUN_THIS_FIRST.sql</code></li>
                   <li>Paste into SQL Editor and click "Run"</li>
                   <li>Refresh this page</li>
                 </ol>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Error: {statsResult.error}
-              </p>
             </div>
           </div>
         </div>

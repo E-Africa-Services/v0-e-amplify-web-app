@@ -53,17 +53,30 @@ export default function SettingsPage() {
 
     if (profile) {
       // Get skills for this profile
-      const { data: skills } = await supabase
+      const { data: skills, error: skillsError } = await supabase
         .from("skills")
         .select("skill_name")
         .eq("profile_id", profile.id)
 
-      setFormData({
-        name: profile.name || "",
-        bio: profile.bio || "",
-        location: profile.location || "",
-        skills: skills?.map(s => s.skill_name).join(", ") || "",
-      })
+      if (skillsError) {
+        console.error("Failed to load skills:", skillsError)
+        setError("Failed to load skills: " + skillsError.message)
+        // Set form data with empty skills on error
+        setFormData({
+          name: profile.name || "",
+          bio: profile.bio || "",
+          location: profile.location || "",
+          skills: "",
+        })
+      } else {
+        // Successfully loaded skills
+        setFormData({
+          name: profile.name || "",
+          bio: profile.bio || "",
+          location: profile.location || "",
+          skills: skills?.map(s => s.skill_name).join(", ") || "",
+        })
+      }
     } else {
       // Profile doesn't exist yet - shouldn't happen if schema trigger is working
       setError("Profile not found. Please log out and log in again.")
@@ -89,7 +102,7 @@ export default function SettingsPage() {
         .filter((s) => s),
     })
 
-    if (result.error) {
+    if (result?.error) {
       setError(result.error)
     } else {
       setSuccess("Profile updated successfully!")

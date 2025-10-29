@@ -17,24 +17,23 @@ export async function getDashboardStats(userId: string) {
       .single()
 
     if (profileError) {
-      // Return a more helpful error message
-      return { 
-        error: "Could not find the table 'public.profiles' in the schema cache. Please run the database setup script." 
+      return { error: profileError.message }
+    }
+
+    // Check if profile exists and has valid id
+    if (!profileData || !profileData.id) {
+      return {
+        error: "Profile not found or invalid. Please ensure your account is properly set up."
       }
     }
 
-    // Fetch sessions count (as mentor and mentee)
-    const { count: mentorSessions, error: mentorSessionsError } = await supabase
+    // Fetch sessions count (as mentor and mentee) in a single query
+    const { count: sessionsCount, error: sessionsError } = await supabase
       .from("sessions")
       .select("*", { count: "exact", head: true })
-      .eq("mentor_id", profileData?.id)
+      .or(`mentor_id.eq.${profileData.id},mentee_id.eq.${profileData.id}`)
 
-    const { count: menteeSessions, error: menteeSessionsError } = await supabase
-      .from("sessions")
-      .select("*", { count: "exact", head: true })
-      .eq("mentee_id", profileData?.id)
-
-    const sessionsCount = (mentorSessions || 0) + (menteeSessions || 0)
+    const totalSessions = sessionsCount || 0
 
     // Fetch credit balance
     const { data: creditData, error: creditError } = await supabase
@@ -45,11 +44,11 @@ export async function getDashboardStats(userId: string) {
 
     const totalCredits = creditData?.balance || 0
 
-    // Fetch user reviews for rating
+    // Fetch user reviews for rating (now using guaranteed profileData.id)
     const { data: reviews, error: reviewsError } = await supabase
       .from("reviews")
       .select("rating")
-      .eq("reviewee_id", profileData?.id)
+      .eq("reviewee_id", profileData.id)
 
     const averageRating =
       reviews && reviews.length > 0
@@ -60,7 +59,7 @@ export async function getDashboardStats(userId: string) {
       data: {
         profile: profileData,
         stats: {
-          sessionsCount,
+          sessionsCount: totalSessions,
           connectionsCount: 0, // Can be calculated from sessions
           totalCredits,
           averageRating,

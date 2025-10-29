@@ -9,8 +9,6 @@ export async function signUp(
   fullName: string,
   goal?: string,
   skills?: string,
-  teachTopics?: string,
-  learnTopics?: string,
   whyHere?: string
 ) {
   const supabase = await createClient()
@@ -52,24 +50,34 @@ export async function signUp(
       const skillsArray = skills.split(",").map((skill) => skill.trim()).filter(Boolean)
       
       if (skillsArray.length > 0) {
-        const profileId = await supabase
+        const { data: profileData, error: profileQueryError } = await supabase
           .from("profiles")
           .select("id")
           .eq("user_id", authData.user.id)
           .single()
 
-        if (profileId.data) {
+        if (profileQueryError) {
+          console.error("Error fetching profile:", profileQueryError)
+          return { error: "Failed to save skills. Please update them later in your profile." }
+        }
+
+        if (profileData) {
           const skillsToInsert = skillsArray.map((skill) => ({
-            profile_id: profileId.data.id,
+            profile_id: profileData.id,
             skill_name: skill,
           }))
 
-          await supabase.from("skills").insert(skillsToInsert)
+          const { error: skillsError } = await supabase.from("skills").insert(skillsToInsert)
+          
+          if (skillsError) {
+            console.error("Error inserting skills:", skillsError)
+            return { error: "Failed to save skills. Please update them later in your profile." }
+          }
         }
       }
     }
   }
-
+  
   return { success: true }
 }
 
@@ -107,9 +115,7 @@ export async function requestPasswordReset(email: string) {
   const supabase = await createClient()
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo:
-      process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
-      `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/reset-password`,
+    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/reset-password`,
   })
 
   if (error) {

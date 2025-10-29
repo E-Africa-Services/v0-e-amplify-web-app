@@ -11,20 +11,28 @@ import { Card } from "@/components/ui/card"
 import { useAuth } from "@/lib/auth-context"
 import { updateUserProfile } from "@/lib/profile-actions"
 import { createClient } from "@/lib/supabase/client"
-import { ArrowLeft, Save } from "lucide-react"
+import { ArrowLeft, Save, Lock } from "lucide-react"
 import Link from "next/link"
 
 export default function SettingsPage() {
   const { user } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
+  const [passwordError, setPasswordError] = useState("")
+  const [passwordSuccess, setPasswordSuccess] = useState("")
   const [formData, setFormData] = useState({
     name: "",
     bio: "",
     location: "",
     skills: "",
+  })
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   })
 
   useEffect(() => {
@@ -111,6 +119,73 @@ export default function SettingsPage() {
     setIsSaving(false)
   }
 
+  const handlePasswordChange = async () => {
+    if (!user) return
+
+    setPasswordError("")
+    setPasswordSuccess("")
+
+    // Validate passwords
+    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      setPasswordError("All password fields are required")
+      return
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      setPasswordError("New password must be at least 6 characters")
+      return
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordError("New passwords do not match")
+      return
+    }
+
+    if (passwordData.currentPassword === passwordData.newPassword) {
+      setPasswordError("New password must be different from current password")
+      return
+    }
+
+    setIsChangingPassword(true)
+    const supabase = createClient()
+
+    try {
+      // First verify current password by attempting to sign in
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email!,
+        password: passwordData.currentPassword,
+      })
+
+      if (signInError) {
+        setPasswordError("Current password is incorrect")
+        setIsChangingPassword(false)
+        return
+      }
+
+      // Update to new password
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: passwordData.newPassword,
+      })
+
+      if (updateError) {
+        setPasswordError(updateError.message)
+      } else {
+        setPasswordSuccess("Password changed successfully!")
+        // Clear password fields
+        setPasswordData({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        })
+        setTimeout(() => setPasswordSuccess(""), 5000)
+      }
+    } catch (err) {
+      setPasswordError("An error occurred. Please try again.")
+    }
+
+    setIsChangingPassword(false)
+  }
+
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-background">
@@ -138,7 +213,8 @@ export default function SettingsPage() {
               <div className="w-8 h-8 rounded-full border-4 border-primary border-t-transparent animate-spin mx-auto" />
             </div>
           ) : (
-            <Card className="p-8">
+            <>
+              <Card className="p-8">
               <div className="space-y-6">
                 {/* Profile Section */}
                 <div>
@@ -201,15 +277,101 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                {/* Save Button */}
+                {/* Save Profile Button */}
                 <div className="flex justify-end pt-4 border-t border-border">
                   <Button onClick={handleSave} disabled={isSaving} className="rounded-full">
                     <Save className="w-4 h-4 mr-2" />
-                    {isSaving ? "Saving..." : "Save Changes"}
+                    {isSaving ? "Saving..." : "Save Profile Changes"}
                   </Button>
                 </div>
               </div>
             </Card>
+
+            {/* Password Change Section */}
+            <Card className="p-8 mt-6">
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
+                    <Lock className="w-5 h-5" />
+                    Change Password
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    Update your password to keep your account secure
+                  </p>
+                </div>
+
+                {passwordError && (
+                  <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{passwordError}</div>
+                )}
+                {passwordSuccess && (
+                  <div className="p-3 rounded-lg bg-green-500/10 text-green-600 text-sm">{passwordSuccess}</div>
+                )}
+
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="currentPassword">Current Password</Label>
+                    <Input
+                      id="currentPassword"
+                      type="password"
+                      placeholder="Enter current password"
+                      value={passwordData.currentPassword}
+                      onChange={(e) =>
+                        setPasswordData({ ...passwordData, currentPassword: e.target.value })
+                      }
+                      className="mt-1.5"
+                      disabled={isChangingPassword}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="newPassword">New Password</Label>
+                    <Input
+                      id="newPassword"
+                      type="password"
+                      placeholder="Enter new password"
+                      value={passwordData.newPassword}
+                      onChange={(e) =>
+                        setPasswordData({ ...passwordData, newPassword: e.target.value })
+                      }
+                      className="mt-1.5"
+                      disabled={isChangingPassword}
+                      minLength={6}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Must be at least 6 characters</p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      placeholder="Confirm new password"
+                      value={passwordData.confirmPassword}
+                      onChange={(e) =>
+                        setPasswordData({ ...passwordData, confirmPassword: e.target.value })
+                      }
+                      className="mt-1.5"
+                      disabled={isChangingPassword}
+                      minLength={6}
+                    />
+                  </div>
+                </div>
+
+                {/* Change Password Button */}
+                <div className="flex justify-end pt-4 border-t border-border">
+                  <Button
+                    onClick={handlePasswordChange}
+                    disabled={isChangingPassword}
+                    variant="outline"
+                    className="rounded-full"
+                  >
+                    <Lock className="w-4 h-4 mr-2" />
+                    {isChangingPassword ? "Changing..." : "Change Password"}
+                  </Button>
+                </div>
+              </div>
+            </Card>
+            </>
           )}
         </div>
       </div>

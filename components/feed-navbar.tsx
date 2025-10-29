@@ -7,18 +7,18 @@ import { Bell, Search, Menu, LogOut } from "lucide-react"
 import { useState } from "react"
 import { usePathname } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
-import { signOut } from "@/lib/auth-actions"
 
 export function FeedNavbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const pathname = usePathname()
-  const { user } = useAuth()
+  const { user, signOut } = useAuth()
 
   const isActive = (path: string) => pathname === path
 
   const handleLogout = async () => {
     await signOut()
+    setShowUserMenu(false)
   }
 
   return (

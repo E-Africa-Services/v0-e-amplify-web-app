@@ -3,7 +3,16 @@
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 
-export async function signUp(email: string, password: string, fullName: string) {
+export async function signUp(
+  email: string,
+  password: string,
+  fullName: string,
+  goal?: string,
+  skills?: string,
+  teachTopics?: string,
+  learnTopics?: string,
+  whyHere?: string
+) {
   const supabase = await createClient()
 
   const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -24,17 +33,40 @@ export async function signUp(email: string, password: string, fullName: string) 
   }
 
   if (authData.user) {
-    const { error: profileError } = await supabase.from("users").insert({
-      id: authData.user.id,
-      email: email,
+    // Create profile with all onboarding data
+    const { error: profileError } = await supabase.from("profiles").insert({
+      user_id: authData.user.id,
       name: fullName,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      email: email,
+      goal: goal || null,
+      bio: whyHere || null,
     })
 
     if (profileError) {
       console.error("Error creating user profile:", profileError)
-      // Don't return error here as auth user was created successfully
+      return { error: "Failed to create profile. Please try again." }
+    }
+
+    // Insert skills if provided
+    if (skills) {
+      const skillsArray = skills.split(",").map((skill) => skill.trim()).filter(Boolean)
+      
+      if (skillsArray.length > 0) {
+        const profileId = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("user_id", authData.user.id)
+          .single()
+
+        if (profileId.data) {
+          const skillsToInsert = skillsArray.map((skill) => ({
+            profile_id: profileId.data.id,
+            skill_name: skill,
+          }))
+
+          await supabase.from("skills").insert(skillsToInsert)
+        }
+      }
     }
   }
 

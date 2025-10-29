@@ -6,42 +6,50 @@ export async function getDashboardStats(userId: string) {
   const supabase = await createClient()
 
   try {
-    // Fetch user profile
-    const { data: userProfile, error: profileError } = await supabase
-      .from("users")
-      .select("*")
-      .eq("id", userId)
+    // Fetch user profile with skills
+    const { data: profileData, error: profileError } = await supabase
+      .from("profiles")
+      .select(`
+        *,
+        skills(*)
+      `)
+      .eq("user_id", userId)
       .single()
 
     if (profileError) {
-      return { error: profileError.message }
+      // Return a more helpful error message
+      return { 
+        error: "Could not find the table 'public.profiles' in the schema cache. Please run the database setup script." 
+      }
     }
 
-    // Fetch mentorship sessions count
-    const { count: sessionsCount, error: sessionsError } = await supabase
-      .from("mentorship_sessions")
+    // Fetch sessions count (as mentor and mentee)
+    const { count: mentorSessions, error: mentorSessionsError } = await supabase
+      .from("sessions")
       .select("*", { count: "exact", head: true })
-      .or(`mentor_id.eq.${userId},learner_id.eq.${userId}`)
+      .eq("mentor_id", profileData?.id)
 
-    // Fetch connections count
-    const { count: connectionsCount, error: connectionsError } = await supabase
-      .from("connections")
+    const { count: menteeSessions, error: menteeSessionsError } = await supabase
+      .from("sessions")
       .select("*", { count: "exact", head: true })
-      .or(`user_id_1.eq.${userId},user_id_2.eq.${userId}`)
+      .eq("mentee_id", profileData?.id)
+
+    const sessionsCount = (mentorSessions || 0) + (menteeSessions || 0)
 
     // Fetch credit balance
     const { data: creditData, error: creditError } = await supabase
-      .from("credit_transactions")
-      .select("amount")
+      .from("credits")
+      .select("balance")
       .eq("user_id", userId)
+      .single()
 
-    const totalCredits = creditData?.reduce((sum, tx) => sum + (tx.amount || 0), 0) || 0
+    const totalCredits = creditData?.balance || 0
 
     // Fetch user reviews for rating
     const { data: reviews, error: reviewsError } = await supabase
       .from("reviews")
       .select("rating")
-      .eq("mentor_id", userId)
+      .eq("reviewee_id", profileData?.id)
 
     const averageRating =
       reviews && reviews.length > 0
@@ -50,16 +58,17 @@ export async function getDashboardStats(userId: string) {
 
     return {
       data: {
-        profile: userProfile,
+        profile: profileData,
         stats: {
-          sessionsCount: sessionsCount || 0,
-          connectionsCount: connectionsCount || 0,
+          sessionsCount,
+          connectionsCount: 0, // Can be calculated from sessions
           totalCredits,
           averageRating,
         },
       },
     }
   } catch (error) {
+    console.error("Dashboard stats error:", error)
     return { error: error instanceof Error ? error.message : "Failed to fetch dashboard stats" }
   }
 }

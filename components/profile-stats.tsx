@@ -5,10 +5,18 @@ interface Stats {
   sessions: number
   rating: number
   students: number
-  earnings: string
+  earnings: number | string
 }
 
-export function ProfileStats({ stats }: { stats: Stats }) {
+export function ProfileStats({ stats }: { stats?: Stats }) {
+  // Provide defaults if stats is undefined
+  const displayStats = stats || {
+    sessions: 0,
+    rating: 0,
+    students: 0,
+    earnings: 0
+  }
+
   return (
     <Card className="p-6">
       <h2 className="text-xl font-bold mb-6">Stats</h2>
@@ -21,7 +29,7 @@ export function ProfileStats({ stats }: { stats: Stats }) {
             </div>
             <span className="text-sm text-muted-foreground">Total Sessions</span>
           </div>
-          <span className="font-bold text-lg">{stats.sessions}</span>
+          <span className="font-bold text-lg">{displayStats.sessions}</span>
         </div>
 
         <div className="flex items-center justify-between">
@@ -31,7 +39,9 @@ export function ProfileStats({ stats }: { stats: Stats }) {
             </div>
             <span className="text-sm text-muted-foreground">Average Rating</span>
           </div>
-          <span className="font-bold text-lg">{stats.rating}</span>
+          <span className="font-bold text-lg">
+            {displayStats.rating > 0 ? displayStats.rating.toFixed(1) : 'N/A'}
+          </span>
         </div>
 
         <div className="flex items-center justify-between">
@@ -41,7 +51,7 @@ export function ProfileStats({ stats }: { stats: Stats }) {
             </div>
             <span className="text-sm text-muted-foreground">Students Mentored</span>
           </div>
-          <span className="font-bold text-lg">{stats.students}</span>
+          <span className="font-bold text-lg">{displayStats.students}</span>
         </div>
 
         <div className="flex items-center justify-between">
@@ -51,7 +61,12 @@ export function ProfileStats({ stats }: { stats: Stats }) {
             </div>
             <span className="text-sm text-muted-foreground">Total Earnings</span>
           </div>
-          <span className="font-bold text-lg">{stats.earnings}</span>
+          <span className="font-bold text-lg">
+            {typeof displayStats.earnings === 'number' 
+              ? `${displayStats.earnings} credits`
+              : displayStats.earnings
+            }
+          </span>
         </div>
       </div>
     </Card>

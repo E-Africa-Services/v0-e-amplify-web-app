@@ -1,32 +1,35 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import Link from "next/link"
-import { ArrowRight, Mail, Lock } from "lucide-react"
-import { signIn } from "@/lib/auth-actions"
-import { useRouter } from "next/navigation"
+import { ArrowRight, Mail, Lock, AlertCircle, CheckCircle2 } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
-import { useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
-  const router = useRouter()
-  const { user, loading } = useAuth()
+  const [showSuccess, setShowSuccess] = useState(false)
+  const { user, loading, signIn } = useAuth()
+  const searchParams = useSearchParams()
 
+  // Check if redirected from successful signup
   useEffect(() => {
-    if (!loading && user) {
-      router.push("/dashboard")
+    if (searchParams.get('signup') === 'success') {
+      setShowSuccess(true)
+      // Hide success message after 5 seconds
+      setTimeout(() => setShowSuccess(false), 5000)
     }
-  }, [user, loading, router])
+  }, [searchParams])
 
+  // If already logged in, they'll be redirected by AuthContext
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -35,22 +38,18 @@ export default function LoginPage() {
     )
   }
 
-  if (user) {
-    return null
-  }
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     setIsLoading(true)
 
-    const result = await signIn(email, password)
+    const { error: signInError } = await signIn(email, password)
 
-    if (result?.error) {
-      setError(result.error)
+    if (signInError) {
+      setError(signInError.message)
       setIsLoading(false)
     }
-    // If successful, signIn redirects to /feed
+    // If successful, AuthContext handles redirect to dashboard
   }
 
   return (
@@ -76,7 +75,25 @@ export default function LoginPage() {
             <p className="text-muted-foreground">Sign in to continue your growth journey</p>
           </div>
 
-          {error && <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>}
+          {showSuccess && (
+            <div className="mb-4 p-3 rounded-lg bg-primary/10 border border-primary/20 flex items-start gap-2">
+              <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm text-primary font-medium">Account created successfully!</p>
+                <p className="text-sm text-primary/80">Please sign in with your credentials to get started.</p>
+              </div>
+            </div>
+          )}
+
+          {error && (
+            <div className="mb-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20 flex items-start gap-2">
+              <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm text-destructive font-medium">Login failed</p>
+                <p className="text-sm text-destructive/80">{error}</p>
+              </div>
+            </div>
+          )}
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>

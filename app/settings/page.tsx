@@ -38,37 +38,37 @@ export default function SettingsPage() {
     setError("")
     const supabase = createClient()
 
-    const { data, error } = await supabase.from("users").select("*").eq("id", user?.id).maybeSingle()
+    // Query from profiles table
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", user?.id)
+      .maybeSingle()
 
-    if (error) {
-      setError("Failed to load profile")
-    } else if (data) {
+    if (profileError) {
+      setError("Failed to load profile: " + profileError.message)
+      setIsLoading(false)
+      return
+    }
+
+    if (profile) {
+      // Get skills for this profile
+      const { data: skills } = await supabase
+        .from("skills")
+        .select("skill_name")
+        .eq("profile_id", profile.id)
+
       setFormData({
-        name: data.name || "",
-        bio: data.bio || "",
-        location: data.location || "",
-        skills: Array.isArray(data.skills) ? data.skills.join(", ") : "",
+        name: profile.name || "",
+        bio: profile.bio || "",
+        location: profile.location || "",
+        skills: skills?.map(s => s.skill_name).join(", ") || "",
       })
     } else {
-      if (user) {
-        const { error: createError } = await supabase.from("users").insert({
-          id: user.id,
-          email: user.email,
-          name: user.user_metadata?.name || "",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-
-        if (!createError) {
-          setFormData({
-            name: user.user_metadata?.name || "",
-            bio: "",
-            location: "",
-            skills: "",
-          })
-        }
-      }
+      // Profile doesn't exist yet - shouldn't happen if schema trigger is working
+      setError("Profile not found. Please log out and log in again.")
     }
+    
     setIsLoading(false)
   }
 

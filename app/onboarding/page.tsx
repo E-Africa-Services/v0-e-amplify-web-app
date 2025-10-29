@@ -44,14 +44,23 @@ export default function OnboardingPage() {
     setError("")
     setIsLoading(true)
 
-    const result = await signUp(formData.email, formData.password, formData.name)
+    const result = await signUp(
+      formData.email,
+      formData.password,
+      formData.name,
+      goal || undefined,
+      formData.skills,
+      formData.teachTopics,
+      formData.learnTopics,
+      formData.whyHere
+    )
 
     if (result?.error) {
       setError(result.error)
       setIsLoading(false)
     } else {
-      // Redirect to dashboard after successful signup
-      router.push("/dashboard")
+      // Redirect to login page after successful signup
+      router.push("/login?signup=success")
     }
   }
 

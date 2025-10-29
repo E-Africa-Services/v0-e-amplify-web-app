@@ -25,13 +25,19 @@ export async function updateSession(request: NextRequest) {
     },
   )
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
-  // Redirect authenticated users trying to access login/signup pages
-  if (user && (request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/onboarding")) {
-    return NextResponse.redirect(new URL("/dashboard", request.url))
+    // Redirect authenticated users trying to access login/signup pages
+    if (user && (request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/onboarding")) {
+      return NextResponse.redirect(new URL("/dashboard", request.url))
+    }
+  } catch (error) {
+    // If there's a network error or other issue, just continue without blocking
+    // This prevents middleware from breaking the app due to Supabase connectivity issues
+    console.error("Middleware auth check error:", error)
   }
 
   return supabaseResponse

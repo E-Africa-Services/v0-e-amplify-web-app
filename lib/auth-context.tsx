@@ -38,9 +38,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null)
         setLoading(false)
 
-        // Auto-redirect authenticated users from home/login to dashboard
+        // Auto-redirect authenticated users from home/login to feed
         if (session && (pathname === "/" || pathname === "/login")) {
-          router.push("/dashboard")
+          router.push("/feed")
         }
       } catch (error) {
         console.error("Error getting session:", error)
@@ -60,7 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Handle auth events
       if (event === "SIGNED_IN") {
-        router.push("/dashboard")
+        router.push("/feed")
         router.refresh()
       } else if (event === "SIGNED_OUT") {
         router.push("/")

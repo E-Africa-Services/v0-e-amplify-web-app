@@ -1,49 +1,58 @@
 import { Card } from "@/components/ui/card"
 import { TrendingUp, Users, Video, DollarSign } from "lucide-react"
 
-const stats = [
-  {
-    label: "Total Sessions",
-    value: "47",
-    change: "+12%",
-    trend: "up",
-    icon: Video,
-    color: "text-primary",
-    bgColor: "bg-primary/10",
-  },
-  {
-    label: "Connections Made",
-    value: "23",
-    change: "+8%",
-    trend: "up",
-    icon: Users,
-    color: "text-secondary",
-    bgColor: "bg-secondary/10",
-  },
-  {
-    label: "Total Earnings",
-    value: "$2,350",
-    change: "+23%",
-    trend: "up",
-    icon: DollarSign,
-    color: "text-accent",
-    bgColor: "bg-accent/10",
-  },
-  {
-    label: "Growth Score",
-    value: "8.7",
-    change: "+0.5",
-    trend: "up",
-    icon: TrendingUp,
-    color: "text-primary",
-    bgColor: "bg-primary/10",
-  },
-]
+interface DashboardStatsProps {
+  stats?: {
+    sessionsCount: number
+    connectionsCount: number
+    totalCredits: number
+    averageRating: string
+  }
+}
 
-export function DashboardStats() {
+export function DashboardStats({ stats }: DashboardStatsProps) {
+  const defaultStats = [
+    {
+      label: "Total Sessions",
+      value: stats?.sessionsCount || "0",
+      change: "+12%",
+      trend: "up",
+      icon: Video,
+      color: "text-primary",
+      bgColor: "bg-primary/10",
+    },
+    {
+      label: "Connections Made",
+      value: stats?.connectionsCount || "0",
+      change: "+8%",
+      trend: "up",
+      icon: Users,
+      color: "text-secondary",
+      bgColor: "bg-secondary/10",
+    },
+    {
+      label: "Total Earnings",
+      value: `$${stats?.totalCredits || "0"}`,
+      change: "+23%",
+      trend: "up",
+      icon: DollarSign,
+      color: "text-accent",
+      bgColor: "bg-accent/10",
+    },
+    {
+      label: "Growth Score",
+      value: stats?.averageRating || "0",
+      change: "+0.5",
+      trend: "up",
+      icon: TrendingUp,
+      color: "text-primary",
+      bgColor: "bg-primary/10",
+    },
+  ]
+
   return (
     <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {stats.map((stat, i) => (
+      {defaultStats.map((stat, i) => (
         <Card key={i} className="p-6">
           <div className="flex items-start justify-between mb-4">
             <div className={`w-12 h-12 rounded-2xl ${stat.bgColor} flex items-center justify-center`}>

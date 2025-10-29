@@ -53,7 +53,7 @@ export async function signIn(email: string, password: string) {
     return { error: error.message }
   }
 
-  redirect("/feed")
+  redirect("/dashboard")
 }
 
 export async function signOut() {

@@ -114,6 +114,36 @@ export async function getCurrentUser() {
 export async function requestPasswordReset(email: string) {
   const supabase = await createClient()
 
+  // First, check if the email exists in profiles (registered users)
+  const { data: profileData, error: profileError } = await supabase
+    .from("profiles")
+    .select("user_id, email")
+    .eq("email", email)
+    .single()
+
+  if (profileError || !profileData) {
+    return { error: "No account found with this email address" }
+  }
+
+  // Check if the user's email is verified in auth.users
+  const { data: { users }, error: usersError } = await supabase.auth.admin.listUsers()
+  
+  if (usersError) {
+    console.error("Error checking user verification:", usersError)
+    // Fallback: try to send reset email anyway
+  } else {
+    const user = users?.find(u => u.email === email)
+    
+    if (!user) {
+      return { error: "No account found with this email address" }
+    }
+
+    if (!user.email_confirmed_at) {
+      return { error: "Email not verified. Please verify your email first before resetting your password." }
+    }
+  }
+
+  // Send password reset email
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/reset-password`,
   })

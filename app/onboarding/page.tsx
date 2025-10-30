@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { ArrowRight, ArrowLeft, Check, Sparkles } from "lucide-react"
+import { ArrowRight, ArrowLeft, Check, Sparkles, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { signUp } from "@/lib/auth-actions"
 import { useRouter } from "next/navigation"
@@ -33,6 +33,38 @@ export default function OnboardingPage() {
   const totalSteps = 4
 
   const handleNext = () => {
+    setError("")
+    
+    // Validate each step before proceeding
+    if (step === 1 && !goal) {
+      setError("Please select your primary goal to continue")
+      return
+    }
+    
+    if (step === 2) {
+      if (!formData.name.trim()) {
+        setError("Please enter your full name")
+        return
+      }
+      if (!formData.email.trim()) {
+        setError("Please enter your email address")
+        return
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(formData.email)) {
+        setError("Please enter a valid email address")
+        return
+      }
+      if (!formData.password) {
+        setError("Please create a password")
+        return
+      }
+      if (formData.password.length < 6) {
+        setError("Password must be at least 6 characters long")
+        return
+      }
+    }
+    
     if (step < totalSteps) setStep(step + 1)
   }
 
@@ -42,22 +74,69 @@ export default function OnboardingPage() {
 
   const handleComplete = async () => {
     setError("")
+    
+    // Validate required fields
+    if (!formData.name.trim()) {
+      setError("Please enter your full name")
+      return
+    }
+
+    if (!formData.email.trim()) {
+      setError("Please enter your email address")
+      return
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.email)) {
+      setError("Please enter a valid email address")
+      return
+    }
+
+    if (!formData.password) {
+      setError("Please create a password")
+      return
+    }
+
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters long")
+      return
+    }
+
+    if (!goal) {
+      setError("Please select your primary goal")
+      return
+    }
+
     setIsLoading(true)
 
     const result = await signUp(
-      formData.email,
+      formData.email.trim(),
       formData.password,
-      formData.name,
-      goal || undefined,
-      formData.skills,
-      formData.whyHere
+      formData.name.trim(),
+      goal,
+      formData.skills.trim(),
+      formData.whyHere.trim()
     )
 
     if (result?.error) {
-      setError(result.error)
+      // Provide user-friendly error messages
+      let errorMessage = result.error
+      
+      if (result.error.includes("already registered") || result.error.includes("already exists")) {
+        errorMessage = "This email is already registered. Please sign in instead."
+      } else if (result.error.includes("Invalid email")) {
+        errorMessage = "Please enter a valid email address."
+      } else if (result.error.includes("Password")) {
+        errorMessage = "Password must be at least 6 characters long."
+      } else if (result.error.includes("network") || result.error.includes("fetch")) {
+        errorMessage = "Network error. Please check your connection and try again."
+      }
+      
+      setError(errorMessage)
       setIsLoading(false)
     } else {
-      // Redirect to login page after successful signup
+      // Redirect to login page with success message
       router.push("/login?signup=success")
     }
   }
@@ -98,7 +177,12 @@ export default function OnboardingPage() {
           </p>
         </div>
 
-        {error && <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>}
+        {error && (
+          <div className="mb-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20 flex items-start gap-2">
+            <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-destructive">{error}</p>
+          </div>
+        )}
 
         {/* Step Content */}
         <Card className="p-8">

@@ -13,6 +13,15 @@ export async function signUp(
 ) {
   const supabase = await createClient()
 
+  // Validate inputs
+  if (!email || !password || !fullName) {
+    return { error: "Email, password, and name are required" }
+  }
+
+  if (password.length < 6) {
+    return { error: "Password must be at least 6 characters long" }
+  }
+
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email,
     password,
@@ -27,7 +36,15 @@ export async function signUp(
   })
 
   if (authError) {
+    // Return user-friendly error messages
+    if (authError.message.includes("already registered")) {
+      return { error: "This email is already registered. Please sign in instead." }
+    }
     return { error: authError.message }
+  }
+
+  if (!authData.user) {
+    return { error: "Failed to create account. Please try again." }
   }
 
   if (authData.user) {
@@ -42,7 +59,14 @@ export async function signUp(
 
     if (profileError) {
       console.error("Error creating user profile:", profileError)
-      return { error: "Failed to create profile. Please try again." }
+      
+      // Check if it's a duplicate user_id error (profile already exists)
+      if (profileError.message.includes("duplicate") || profileError.message.includes("unique")) {
+        // Profile already exists, this is okay - user might be re-registering
+        console.log("Profile already exists for user:", authData.user.id)
+      } else {
+        return { error: "Account created but profile setup failed. Please complete your profile in settings." }
+      }
     }
 
     // Insert skills if provided
@@ -58,10 +82,8 @@ export async function signUp(
 
         if (profileQueryError) {
           console.error("Error fetching profile:", profileQueryError)
-          return { error: "Failed to save skills. Please update them later in your profile." }
-        }
-
-        if (profileData) {
+          // Don't fail signup for skills error
+        } else if (profileData) {
           const skillsToInsert = skillsArray.map((skill) => ({
             profile_id: profileData.id,
             skill_name: skill,
@@ -71,7 +93,7 @@ export async function signUp(
           
           if (skillsError) {
             console.error("Error inserting skills:", skillsError)
-            return { error: "Failed to save skills. Please update them later in your profile." }
+            // Don't fail signup for skills error
           }
         }
       }
@@ -84,12 +106,24 @@ export async function signUp(
 export async function signIn(email: string, password: string) {
   const supabase = await createClient()
 
+  // Validate inputs
+  if (!email || !password) {
+    return { error: "Email and password are required" }
+  }
+
   const { error } = await supabase.auth.signInWithPassword({
     email,
     password,
   })
 
   if (error) {
+    // Return user-friendly error messages
+    if (error.message.includes("Invalid login credentials") || 
+        error.message.includes("Invalid email or password")) {
+      return { error: "Invalid email or password. Please try again." }
+    } else if (error.message.includes("Email not confirmed")) {
+      return { error: "Please verify your email before signing in. Check your inbox for the verification link." }
+    }
     return { error: error.message }
   }
 

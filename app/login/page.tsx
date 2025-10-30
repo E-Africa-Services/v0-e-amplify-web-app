@@ -42,15 +42,49 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    
+    // Validate email
+    if (!email.trim()) {
+      setError("Please enter your email address")
+      setIsLoading(false)
+      return
+    }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address")
+      setIsLoading(false)
+      return
+    }
+    
+    // Validate password
+    if (!password) {
+      setError("Please enter your password")
+      setIsLoading(false)
+      return
+    }
+    
     setIsLoading(true)
 
-    const { error: signInError } = await signIn(email, password)
+    const { error: signInError } = await signIn(email.trim(), password)
 
     if (signInError) {
-      setError(signInError.message)
+      // Provide user-friendly error messages
+      let errorMessage = signInError.message
+      
+      if (signInError.message.includes("Invalid login credentials") || 
+          signInError.message.includes("Invalid email or password")) {
+        errorMessage = "Invalid email or password. Please try again."
+      } else if (signInError.message.includes("Email not confirmed")) {
+        errorMessage = "Please verify your email before signing in. Check your inbox for the verification link."
+      } else if (signInError.message.includes("network") || signInError.message.includes("fetch")) {
+        errorMessage = "Network error. Please check your connection and try again."
+      }
+      
+      setError(errorMessage)
       setIsLoading(false)
     }
-    // If successful, AuthContext handles redirect to dashboard
+    // If successful, AuthContext handles redirect to feed
   }
 
   return (

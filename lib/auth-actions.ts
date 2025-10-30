@@ -1,6 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import { createServiceRoleClient } from "@/lib/supabase/service"
 import { redirect } from "next/navigation"
 
 export async function signUp(
@@ -22,6 +23,27 @@ export async function signUp(
     return { error: "Password must be at least 6 characters long" }
   }
 
+  // Check if email already exists in profiles table
+  try {
+    const { data: existingProfile, error: checkError } = await supabase
+      .from("profiles")
+      .select("email")
+      .eq("email", email.toLowerCase())
+      .maybeSingle()
+
+    if (existingProfile) {
+      return { error: "This email is already registered. Please sign in instead." }
+    }
+
+    // If there's a query error (not "not found"), log it but continue
+    if (checkError && !checkError.message.includes("no rows")) {
+      console.error("Error checking email uniqueness:", checkError)
+    }
+  } catch (err) {
+    console.error("Unexpected error checking email:", err)
+    // Continue with signup even if check fails
+  }
+
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email,
     password,
@@ -31,13 +53,14 @@ export async function signUp(
       },
       emailRedirectTo:
         process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
-        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/callback`,
+        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/callback?next=/login?verified=true`,
     },
   })
 
   if (authError) {
     // Return user-friendly error messages
-    if (authError.message.includes("already registered")) {
+    if (authError.message.includes("already registered") || 
+        authError.message.includes("User already registered")) {
       return { error: "This email is already registered. Please sign in instead." }
     }
     return { error: authError.message }
@@ -46,25 +69,52 @@ export async function signUp(
   if (!authData.user) {
     return { error: "Failed to create account. Please try again." }
   }
+  const userId = authData.user.id
+
+  if (!userId) {
+    return { error: "Failed to create account. Please try again." }
+  }
 
   if (authData.user) {
-    // Create profile with all onboarding data
-    const { error: profileError } = await supabase.from("profiles").insert({
-      user_id: authData.user.id,
-      name: fullName,
-      email: email,
-      goal: goal || null,
-      bio: whyHere || null,
-    })
+    // Create profile with all onboarding data using service role client when possible
+    let profileError = null
+    try {
+      let serviceClient
+      try {
+        serviceClient = createServiceRoleClient()
+      } catch (e) {
+        // Service role not available in this environment; we'll fallback to user client
+        serviceClient = null
+      }
+
+      const profilePayload = {
+        user_id: authData.user.id,
+        name: fullName,
+        email: email,
+        goal: goal || null,
+        bio: whyHere || null,
+      }
+
+      if (serviceClient) {
+        const { error } = await serviceClient.from("profiles").insert(profilePayload)
+        profileError = error
+      } else {
+        const { error } = await supabase.from("profiles").insert(profilePayload)
+        profileError = error
+      }
+    } catch (err) {
+      console.error("Unexpected error creating profile:", err)
+      profileError = { message: String(err) }
+    }
 
     if (profileError) {
-      console.error("Error creating user profile:", profileError)
-      
-      // Check if it's a duplicate user_id error (profile already exists)
-      if (profileError.message.includes("duplicate") || profileError.message.includes("unique")) {
-        // Profile already exists, this is okay - user might be re-registering
+      // If profile exists, ignore. Otherwise log and continue (do not block signup)
+      const msg = String(profileError.message || profileError)
+      if (msg.includes("duplicate") || msg.includes("unique") || msg.includes("already exists")) {
         console.log("Profile already exists for user:", authData.user.id)
       } else {
+        console.error("Error creating user profile:", profileError)
+        // Don't block account creation — return success but inform client to finish profile
         return { error: "Account created but profile setup failed. Please complete your profile in settings." }
       }
     }
@@ -72,28 +122,41 @@ export async function signUp(
     // Insert skills if provided
     if (skills) {
       const skillsArray = skills.split(",").map((skill) => skill.trim()).filter(Boolean)
-      
-      if (skillsArray.length > 0) {
-        const { data: profileData, error: profileQueryError } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("user_id", authData.user.id)
-          .single()
 
-        if (profileQueryError) {
-          console.error("Error fetching profile:", profileQueryError)
-          // Don't fail signup for skills error
-        } else if (profileData) {
+      if (skillsArray.length > 0) {
+        // Try to find profile id
+        let profileData = null
+        try {
+          const { data, error } = await (async () => {
+            try {
+              const serviceClient = createServiceRoleClient()
+                return await serviceClient.from("profiles").select("id").eq("user_id", userId).single()
+            } catch (e) {
+                return await supabase.from("profiles").select("id").eq("user_id", userId).single()
+            }
+          })()
+          if (!error) profileData = data
+        } catch (e) {
+          console.error("Error fetching profile id for skills insertion:", e)
+        }
+
+        if (profileData) {
           const skillsToInsert = skillsArray.map((skill) => ({
             profile_id: profileData.id,
             skill_name: skill,
           }))
 
-          const { error: skillsError } = await supabase.from("skills").insert(skillsToInsert)
-          
-          if (skillsError) {
-            console.error("Error inserting skills:", skillsError)
-            // Don't fail signup for skills error
+          try {
+            try {
+              const serviceClient = createServiceRoleClient()
+              const { error } = await serviceClient.from("skills").insert(skillsToInsert)
+              if (error) console.error("Error inserting skills via service client:", error)
+            } catch (e) {
+              const { error } = await supabase.from("skills").insert(skillsToInsert)
+              if (error) console.error("Error inserting skills:", error)
+            }
+          } catch (e) {
+            console.error("Unexpected error inserting skills:", e)
           }
         }
       }

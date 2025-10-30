@@ -17,13 +17,21 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [showSuccess, setShowSuccess] = useState(false)
+  const [successMessage, setSuccessMessage] = useState("")
   const { user, loading, signIn } = useAuth()
   const searchParams = useSearchParams()
 
-  // Check if redirected from successful signup
+  // Check if redirected from successful signup or email verification
   useEffect(() => {
     if (searchParams.get('signup') === 'success') {
       setShowSuccess(true)
+      setSuccessMessage("Account created successfully! Please check your email to verify your account, then sign in.")
+      // Hide success message after 8 seconds
+      const timer = setTimeout(() => setShowSuccess(false), 8000)
+      return () => clearTimeout(timer)
+    } else if (searchParams.get('verified') === 'true') {
+      setShowSuccess(true)
+      setSuccessMessage("Email verified successfully! You can now sign in with your credentials.")
       // Hide success message after 5 seconds
       const timer = setTimeout(() => setShowSuccess(false), 5000)
       return () => clearTimeout(timer)
@@ -114,8 +122,7 @@ export default function LoginPage() {
             <div className="mb-4 p-3 rounded-lg bg-primary/10 border border-primary/20 flex items-start gap-2">
               <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                <p className="text-sm text-primary font-medium">Account created successfully!</p>
-                <p className="text-sm text-primary/80">Please sign in with your credentials to get started.</p>
+                <p className="text-sm text-primary">{successMessage}</p>
               </div>
             </div>
           )}

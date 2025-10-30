@@ -127,15 +127,13 @@ export async function signUp(
         // Try to find profile id
         let profileData = null
         try {
-          const { data, error } = await (async () => {
-            try {
-              const serviceClient = createServiceRoleClient()
-                return await serviceClient.from("profiles").select("id").eq("user_id", userId).single()
-            } catch (e) {
-                return await supabase.from("profiles").select("id").eq("user_id", userId).single()
-            }
-          })()
-          if (!error) profileData = data
+          // First try with regular client (should work if profile was just created)
+          const { data, error } = await supabase.from("profiles").select("id").eq("user_id", userId).single()
+          if (!error && data) {
+            profileData = data
+          } else {
+            console.log("Could not fetch profile for skills insertion:", error?.message)
+          }
         } catch (e) {
           console.error("Error fetching profile id for skills insertion:", e)
         }
@@ -146,17 +144,38 @@ export async function signUp(
             skill_name: skill,
           }))
 
+          // Try to insert skills - don't block signup if this fails
           try {
+            let skillsInserted = false
+            
+            // Try service client first if available
             try {
               const serviceClient = createServiceRoleClient()
               const { error } = await serviceClient.from("skills").insert(skillsToInsert)
-              if (error) console.error("Error inserting skills via service client:", error)
-            } catch (e) {
+              if (!error) {
+                skillsInserted = true
+              } else {
+                console.log("Service client skills insert failed, trying regular client:", error.message)
+              }
+            } catch (serviceError) {
+              console.log("Service client not available or failed, using regular client")
+            }
+
+            // Fallback to regular client if service client failed
+            if (!skillsInserted) {
               const { error } = await supabase.from("skills").insert(skillsToInsert)
-              if (error) console.error("Error inserting skills:", error)
+              if (error) {
+                console.log("Skills insertion failed (can be added later in settings):", error.message)
+              } else {
+                skillsInserted = true
+              }
+            }
+
+            if (skillsInserted) {
+              console.log(`Successfully inserted ${skillsToInsert.length} skill(s)`)
             }
           } catch (e) {
-            console.error("Unexpected error inserting skills:", e)
+            console.log("Skills insertion skipped (can be added in settings):", e)
           }
         }
       }

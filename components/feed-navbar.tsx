@@ -104,7 +104,7 @@ export function FeedNavbar() {
               {showUserMenu && (
                 <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-lg shadow-lg py-2 z-50">
                   <Link
-                    href={`/profile/${user?.id}`}
+                    href="/profile/me"
                     className="block px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
                   >
                     View Profile

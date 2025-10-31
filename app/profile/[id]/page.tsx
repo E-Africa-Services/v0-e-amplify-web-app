@@ -24,11 +24,42 @@ export default async function ProfilePage({
   const { id } = await params
 
   // If the ID is "me" or matches current user, show their profile
-  const profileId = id === "me" ? currentUser.id : id
+  // Also handle numeric IDs by redirecting to current user's UUID
+  let profileId = id
+  
+  if (id === "me") {
+    profileId = currentUser.id
+  } else if (id === "1" || !id || id.length < 30) {
+    // Handle invalid/numeric IDs - redirect to current user's profile
+    profileId = currentUser.id
+  }
   
   const result = await getUserProfile(profileId)
 
   if (result.error || !result.data) {
+    // If profile not found and it's the current user, show friendly message to complete profile
+    if (profileId === currentUser.id) {
+      return (
+        <div className="min-h-screen bg-background">
+          <FeedNavbar />
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-12">
+            <div className="bg-primary/10 border border-primary/20 rounded-lg p-8 text-center">
+              <h1 className="text-2xl font-bold mb-4">Complete Your Profile</h1>
+              <p className="text-muted-foreground mb-6">
+                Your profile is being set up. Please complete your profile information in settings.
+              </p>
+              <a 
+                href="/settings/account" 
+                className="inline-flex items-center justify-center px-6 py-3 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors"
+              >
+                Go to Settings
+              </a>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
     return (
       <div className="min-h-screen bg-background">
         <FeedNavbar />

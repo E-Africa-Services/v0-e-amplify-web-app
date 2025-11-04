@@ -35,6 +35,12 @@ export default function LoginPage() {
       // Hide success message after 5 seconds
       const timer = setTimeout(() => setShowSuccess(false), 5000)
       return () => clearTimeout(timer)
+    } else if (searchParams.get('reset') === 'success') {
+      setShowSuccess(true)
+      setSuccessMessage("Password reset successfully! You can now sign in with your new password.")
+      // Hide success message after 5 seconds
+      const timer = setTimeout(() => setShowSuccess(false), 5000)
+      return () => clearTimeout(timer)
     }
   }, [searchParams])
 

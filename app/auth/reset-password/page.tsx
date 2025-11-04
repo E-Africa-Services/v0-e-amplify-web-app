@@ -81,10 +81,14 @@ export default function ResetPasswordPage() {
     } else {
       setSuccess(true)
       setIsLoading(false)
-      // Redirect to feed after 2 seconds
+      
+      // Sign out the user so they have to log in with new password
+      await supabase.auth.signOut()
+      
+      // Redirect to login after 3 seconds
       setTimeout(() => {
-        router.push("/feed")
-      }, 2000)
+        router.push("/login?reset=success")
+      }, 3000)
     }
   }
 
@@ -206,9 +210,12 @@ export default function ResetPasswordPage() {
               <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="w-8 h-8 text-primary" />
               </div>
-              <h2 className="text-2xl font-bold mb-2">Password updated!</h2>
+              <h2 className="text-2xl font-bold mb-2">Password Reset Successful!</h2>
               <p className="text-muted-foreground mb-6">
-                Your password has been successfully updated. Redirecting to feed...
+                Your password has been successfully updated. You can now sign in with your new password.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Redirecting to login page...
               </p>
             </div>
           )}

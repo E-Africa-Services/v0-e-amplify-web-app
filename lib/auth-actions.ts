@@ -261,7 +261,7 @@ export async function requestPasswordReset(email: string) {
 
   // Send password reset email
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/reset-password`,
+    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/callback?type=recovery`,
   })
 
   if (error) {
@@ -274,6 +274,52 @@ export async function requestPasswordReset(email: string) {
 export async function updatePassword(newPassword: string) {
   const supabase = await createClient()
 
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  
+  if (userError || !user) {
+    return { error: "User not authenticated" }
+  }
+
+  // Update to new password
+  const { error } = await supabase.auth.updateUser({
+    password: newPassword,
+  })
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  return { success: true }
+}
+
+// For settings page - change password when user knows their old password
+export async function changePassword(oldPassword: string, newPassword: string) {
+  const supabase = await createClient()
+
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  
+  if (userError || !user) {
+    return { error: "User not authenticated" }
+  }
+
+  // Check if new password is the same as old password
+  if (oldPassword === newPassword) {
+    return { error: "New password must be different from your current password" }
+  }
+
+  // Verify the old password is correct by attempting to sign in
+  const { error: signInError } = await supabase.auth.signInWithPassword({
+    email: user.email!,
+    password: oldPassword,
+  })
+  
+  if (signInError) {
+    return { error: "Current password is incorrect" }
+  }
+
+  // Update to new password
   const { error } = await supabase.auth.updateUser({
     password: newPassword,
   })

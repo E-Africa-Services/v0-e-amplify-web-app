@@ -16,6 +16,16 @@ export const metadata: Metadata = {
   title: "E-Amplify - Find Purpose. Share Knowledge. Earn with Impact.",
   description: "Connect instantly for mentorship, collaboration, and earning opportunities. Amplify what matters.",
   generator: "v0.app",
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: [
+      { url: "/E-africa.png", type: "image/png" },
+    ],
+  },
 }
 
 export default function RootLayout({

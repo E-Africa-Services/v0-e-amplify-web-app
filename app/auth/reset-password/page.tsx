@@ -30,20 +30,15 @@ export default function ResetPasswordPage() {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession()
         
         if (sessionError || !session) {
+          console.error("Session error:", sessionError)
           setError("Invalid or expired password reset link. Please request a new one.")
           setIsAuthorized(false)
           setIsValidating(false)
           return
         }
 
-        // Check if email is verified
-        if (!session.user.email_confirmed_at) {
-          setError("Email not verified. Please verify your email first.")
-          setIsAuthorized(false)
-          setIsValidating(false)
-          return
-        }
-
+        // For password recovery, we don't need to check email verification
+        // The user is already authenticated via the recovery link
         setIsAuthorized(true)
         setIsValidating(false)
       } catch (err) {

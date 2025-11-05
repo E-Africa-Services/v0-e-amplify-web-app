@@ -6,12 +6,29 @@ export async function GET(request: Request) {
   const code = searchParams.get("code")
   const next = searchParams.get("next") ?? "/feed"
   const type = searchParams.get("type") // Check if this is a password recovery
+  const error = searchParams.get("error")
+  const error_description = searchParams.get("error_description")
+
+  console.log("Auth callback:", { code: !!code, next, type, error, origin })
+
+  // Handle errors from Supabase
+  if (error) {
+    console.error("Auth callback error:", error, error_description)
+    return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(error_description || error)}`)
+  }
 
   if (code) {
     const supabase = await createClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    const { error: exchangeError, data } = await supabase.auth.exchangeCodeForSession(code)
     
-    if (!error) {
+    if (exchangeError) {
+      console.error("Error exchanging code:", exchangeError)
+      return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(exchangeError.message)}`)
+    }
+    
+    if (data.session) {
+      console.log("Session established:", { userId: data.session.user.id, type })
+      
       // Successfully verified email and exchanged code for session
       const forwardedHost = request.headers.get("x-forwarded-host")
       const isLocalEnv = process.env.NODE_ENV === "development"
@@ -19,6 +36,7 @@ export async function GET(request: Request) {
       // If this is a password recovery flow, redirect to reset password page
       if (type === "recovery") {
         const resetUrl = "/auth/reset-password"
+        console.log("Redirecting to reset password:", resetUrl)
         if (forwardedHost) {
           return NextResponse.redirect(`${isLocalEnv ? "http" : "https"}://${forwardedHost}${resetUrl}`)
         } else {
@@ -26,6 +44,8 @@ export async function GET(request: Request) {
         }
       }
       
+      // Regular email verification - redirect to next page
+      console.log("Redirecting to:", next)
       if (forwardedHost) {
         return NextResponse.redirect(`${isLocalEnv ? "http" : "https"}://${forwardedHost}${next}`)
       } else {
@@ -35,5 +55,6 @@ export async function GET(request: Request) {
   }
 
   // If no code or error, redirect to home
-  return NextResponse.redirect(`${origin}/`)
+  console.log("No code found, redirecting to login")
+  return NextResponse.redirect(`${origin}/login`)
 }

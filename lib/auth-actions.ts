@@ -259,7 +259,7 @@ export async function requestPasswordReset(email: string) {
     }
   }
 
-  // Send password reset email with 30 minute expiration
+  // Send password reset email with 24 hours expiration
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/callback?type=recovery`,
   })

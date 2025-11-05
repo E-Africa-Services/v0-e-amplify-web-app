@@ -14,8 +14,7 @@ export async function GET(request: Request) {
     next, 
     type, 
     error, 
-    origin,
-    fullUrl: request.url 
+    origin
   })
 
   // Handle errors from Supabase
@@ -34,14 +33,12 @@ export async function GET(request: Request) {
     }
     
     if (data.session) {
-      const user = data.session.user
+    if (data.session) {
       console.log("Session established:", { 
-        userId: user.id, 
+        userId: data.session.user.id, 
         type,
-        aud: user.aud,
-        userMetadata: user.user_metadata 
+        aud: data.session.user.aud
       })
-      
       // Successfully verified email and exchanged code for session
       const forwardedHost = request.headers.get("x-forwarded-host")
       const isLocalEnv = process.env.NODE_ENV === "development"

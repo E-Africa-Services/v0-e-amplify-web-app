@@ -33,7 +33,6 @@ export async function GET(request: Request) {
     }
     
     if (data.session) {
-    if (data.session) {
       console.log("Session established:", { 
         userId: data.session.user.id, 
         type,

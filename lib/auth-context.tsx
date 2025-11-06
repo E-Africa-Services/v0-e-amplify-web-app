@@ -38,12 +38,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null)
         setLoading(false)
 
+        // Check if there are password recovery tokens in the URL
+        const hash = typeof window !== "undefined" ? window.location.hash : ""
+        const hasRecoveryTokens = hash.includes("access_token") && hash.includes("type=recovery")
+        
+        console.log("AuthContext init - pathname:", pathname)
+        console.log("AuthContext init - has recovery tokens:", hasRecoveryTokens)
+        
+        // If there are recovery tokens, redirect to reset password page immediately
+        if (hasRecoveryTokens && pathname === "/") {
+          console.log("✓ Recovery tokens detected, redirecting to reset password page")
+          window.location.href = "/auth/reset-password" + hash
+          return
+        }
+
         // Auto-redirect authenticated users from home/login to feed
         // BUT: Don't redirect if this is a password reset flow
         const isPasswordResetFlow = pathname.includes("/auth/reset-password") || 
-                                    pathname.includes("/auth/callback")
+                                    pathname.includes("/auth/callback") ||
+                                    hasRecoveryTokens
         
         if (session && (pathname === "/" || pathname === "/login") && !isPasswordResetFlow) {
+          console.log("✓ Authenticated user, redirecting to feed")
           router.push("/feed")
         }
       } catch (error) {
@@ -68,20 +84,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (event === "SIGNED_IN") {
         // Don't redirect if user is on password reset flow
         const currentPath = window.location.pathname
+        const currentHash = window.location.hash
+        const hasRecoveryTokens = currentHash.includes("access_token") && currentHash.includes("type=recovery")
         const isPasswordResetFlow = currentPath === "/auth/reset-password" || 
-                                    currentPath === "/auth/callback"
+                                    currentPath === "/auth/callback" ||
+                                    hasRecoveryTokens
         
         if (!isPasswordResetFlow) {
+          console.log("✓ SIGNED_IN, redirecting to feed")
           router.push("/feed")
           router.refresh()
+        } else {
+          console.log("✓ SIGNED_IN during password reset, staying on current page")
         }
       } else if (event === "SIGNED_OUT") {
         router.push("/")
         router.refresh()
       } else if (event === "PASSWORD_RECOVERY") {
         // PASSWORD_RECOVERY event means user clicked reset link
-        // Stay on current page (should be /auth/reset-password)
-        console.log("✓ PASSWORD_RECOVERY event - user can now reset password")
+        // Redirect to reset password page if not already there
+        console.log("✓ PASSWORD_RECOVERY event detected")
+        if (window.location.pathname !== "/auth/reset-password") {
+          window.location.href = "/auth/reset-password" + window.location.hash
+        }
       }
     })
 

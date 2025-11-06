@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card"
 import Link from "next/link"
 import { Lock, CheckCircle, AlertCircle } from "lucide-react"
 import { updatePassword } from "@/lib/auth-actions"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 
 export default function ResetPasswordPage() {
@@ -21,24 +21,101 @@ export default function ResetPasswordPage() {
   const [isValidating, setIsValidating] = useState(true)
   const [isAuthorized, setIsAuthorized] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createClient()
 
   // Verify user has a valid password reset session
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        console.log('Reset password page - Current URL:', window.location.href)
+        console.log('Reset password page - Search params:', Object.fromEntries(searchParams.entries()))
+        console.log('Reset password page - Hash:', window.location.hash)
+        
+        // Check for different possible token formats in URL
+        const accessToken = searchParams.get('access_token')
+        const refreshToken = searchParams.get('refresh_token')
+        const type = searchParams.get('type')
+        const token = searchParams.get('token')
+        const errorCode = searchParams.get('error_code')
+        const errorDescription = searchParams.get('error_description')
+        
+        // Also check hash for tokens (Supabase sometimes puts them there)
+        const hash = window.location.hash
+        const hashParams = new URLSearchParams(hash.substring(1))
+        const hashAccessToken = hashParams.get('access_token')
+        const hashRefreshToken = hashParams.get('refresh_token')
+        const hashType = hashParams.get('type')
+        
+        console.log('Token parameters:', { 
+          accessToken, refreshToken, type, token, 
+          hashAccessToken, hashRefreshToken, hashType,
+          errorCode, errorDescription 
+        })
+
+        // Handle errors first
+        if (errorCode || errorDescription) {
+          console.error('Password reset error:', errorCode, errorDescription)
+          setError(errorDescription || "There was an error with your password reset link.")
+          setIsAuthorized(false)
+          setIsValidating(false)
+          return
+        }
+
+        // Method 1: Tokens in URL hash (most common with Supabase)
+        if (hashAccessToken && hashRefreshToken && hashType === 'recovery') {
+          console.log('✓ Password reset tokens detected in hash - setting session')
+          
+          const { error: sessionError } = await supabase.auth.setSession({
+            access_token: hashAccessToken,
+            refresh_token: hashRefreshToken,
+          })
+          
+          if (sessionError) {
+            console.error('Error setting session from hash:', sessionError)
+            setError("There was an error with your reset link. Please try again.")
+            setIsAuthorized(false)
+          } else {
+            console.log('✓ Session set successfully from hash tokens')
+            setIsAuthorized(true)
+          }
+          setIsValidating(false)
+          return
+        }
+
+        // Method 2: Tokens in search params
+        if (accessToken && refreshToken && type === 'recovery') {
+          console.log('✓ Password reset tokens detected in search params - setting session')
+          
+          const { error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          })
+          
+          if (sessionError) {
+            console.error('Error setting session from params:', sessionError)
+            setError("There was an error with your reset link. Please try again.")
+            setIsAuthorized(false)
+          } else {
+            console.log('✓ Session set successfully from search params')
+            setIsAuthorized(true)
+          }
+          setIsValidating(false)
+          return
+        }
+
+        // Method 3: Check existing session (user already authenticated)
         const { data: { session }, error: sessionError } = await supabase.auth.getSession()
         
         if (sessionError || !session) {
-          console.error("Session error:", sessionError)
+          console.error("No valid session found:", sessionError)
           setError("Invalid or expired password reset link. Please request a new one.")
           setIsAuthorized(false)
           setIsValidating(false)
           return
         }
 
-        // For password recovery, we don't need to check email verification
-        // The user is already authenticated via the recovery link
+        console.log('✓ Valid session found:', session.user.email)
         setIsAuthorized(true)
         setIsValidating(false)
       } catch (err) {
@@ -50,7 +127,22 @@ export default function ResetPasswordPage() {
     }
 
     checkAuth()
-  }, [supabase])
+
+    // Listen for PASSWORD_RECOVERY event from Supabase
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state change in reset password page:', event, session?.user?.email)
+      
+      if (event === 'PASSWORD_RECOVERY') {
+        console.log('✓ PASSWORD_RECOVERY event detected')
+        setIsAuthorized(true)
+        setIsValidating(false)
+      }
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [supabase, searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

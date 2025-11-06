@@ -61,8 +61,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Handle auth events
       if (event === "SIGNED_IN") {
         // Don't redirect if user is on password reset flow
-        const isPasswordResetFlow = pathname?.includes("/auth/reset-password") || 
-                                    pathname?.includes("/auth/callback")
+        const currentPath = window.location.pathname
+        const isPasswordResetFlow = currentPath === "/auth/reset-password" || 
+                                    currentPath === "/auth/callback"
         
         if (!isPasswordResetFlow) {
           router.push("/feed")

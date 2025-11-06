@@ -9,14 +9,10 @@ export async function GET(request: Request) {
   const error = searchParams.get("error")
   const error_description = searchParams.get("error_description")
 
-  console.log("Auth callback received:", { 
-    code: !!code, 
-    next, 
-    type, 
-    error, 
-    origin,
-    fullUrl: request.url
-  })
+  console.log("=== Auth Callback Debug ===")
+  console.log("Full URL:", request.url)
+  console.log("Params:", { code: !!code, next, type, error })
+  console.log("Origin:", origin)
 
   // Handle errors from Supabase
   if (error) {
@@ -30,6 +26,8 @@ export async function GET(request: Request) {
     // Check if this is a password recovery BEFORE exchanging code
     const isPasswordRecovery = type === "recovery"
     
+    console.log("Before exchange - isPasswordRecovery:", isPasswordRecovery)
+    
     const { error: exchangeError, data } = await supabase.auth.exchangeCodeForSession(code)
     
     if (exchangeError) {
@@ -38,20 +36,28 @@ export async function GET(request: Request) {
     }
     
     if (data.session) {
+      const user = data.session.user
       console.log("Session established:", { 
-        userId: data.session.user.id, 
+        userId: user.id, 
         type,
         isPasswordRecovery,
-        aud: data.session.user.aud
+        aud: user.aud,
+        recoveryMode: user.aud === "authenticated" && user.app_metadata?.provider === "email"
       })
       
       const forwardedHost = request.headers.get("x-forwarded-host")
       const isLocalEnv = process.env.NODE_ENV === "development"
       
+      // Check multiple ways to detect password recovery
+      // 1. Explicit type=recovery parameter
+      // 2. Check if user metadata indicates recovery
+      const isRecovery = isPasswordRecovery || 
+                         user.aud === "authenticated" && !next.includes("verified")
+      
       // IMPORTANT: Redirect to reset password page FIRST for password recovery
-      if (isPasswordRecovery) {
+      if (isRecovery && type === "recovery") {
         const resetUrl = "/auth/reset-password"
-        console.log("Password recovery detected - redirecting to:", resetUrl)
+        console.log("✓ Password recovery detected - redirecting to:", resetUrl)
         if (forwardedHost) {
           return NextResponse.redirect(`${isLocalEnv ? "http" : "https"}://${forwardedHost}${resetUrl}`)
         } else {
@@ -60,7 +66,7 @@ export async function GET(request: Request) {
       }
       
       // Regular email verification - redirect to next page
-      console.log("Email verification - redirecting to:", next)
+      console.log("✓ Email verification - redirecting to:", next)
       if (forwardedHost) {
         return NextResponse.redirect(`${isLocalEnv ? "http" : "https"}://${forwardedHost}${next}`)
       } else {

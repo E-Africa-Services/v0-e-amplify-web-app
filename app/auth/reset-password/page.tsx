@@ -80,9 +80,9 @@ export default function ResetPasswordPage() {
       // Sign out the user so they have to log in with new password
       await supabase.auth.signOut()
       
-      // Redirect to login after 3 seconds
+      // Redirect to login page after 3 seconds
       setTimeout(() => {
-        router.push("/login?reset=success")
+        window.location.href = "/login?reset=success"
       }, 3000)
     }
   }

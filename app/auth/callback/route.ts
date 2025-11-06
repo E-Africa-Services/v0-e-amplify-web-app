@@ -14,7 +14,8 @@ export async function GET(request: Request) {
     next, 
     type, 
     error, 
-    origin
+    origin,
+    fullUrl: request.url
   })
 
   // Handle errors from Supabase
@@ -25,6 +26,10 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient()
+    
+    // Check if this is a password recovery BEFORE exchanging code
+    const isPasswordRecovery = type === "recovery"
+    
     const { error: exchangeError, data } = await supabase.auth.exchangeCodeForSession(code)
     
     if (exchangeError) {
@@ -36,16 +41,14 @@ export async function GET(request: Request) {
       console.log("Session established:", { 
         userId: data.session.user.id, 
         type,
+        isPasswordRecovery,
         aud: data.session.user.aud
       })
-      // Successfully verified email and exchanged code for session
+      
       const forwardedHost = request.headers.get("x-forwarded-host")
       const isLocalEnv = process.env.NODE_ENV === "development"
       
-      // Check if this is a password recovery flow
-      // When type=recovery is in URL, it's a password reset
-      const isPasswordRecovery = type === "recovery"
-      
+      // IMPORTANT: Redirect to reset password page FIRST for password recovery
       if (isPasswordRecovery) {
         const resetUrl = "/auth/reset-password"
         console.log("Password recovery detected - redirecting to:", resetUrl)

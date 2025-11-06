@@ -60,8 +60,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Handle auth events
       if (event === "SIGNED_IN") {
-        router.push("/feed")
-        router.refresh()
+        // Don't redirect if user is on password reset flow
+        const isPasswordResetFlow = pathname?.includes("/auth/reset-password") || 
+                                    pathname?.includes("/auth/callback")
+        
+        if (!isPasswordResetFlow) {
+          router.push("/feed")
+          router.refresh()
+        }
       } else if (event === "SIGNED_OUT") {
         router.push("/")
         router.refresh()

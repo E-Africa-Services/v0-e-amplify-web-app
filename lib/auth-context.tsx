@@ -38,12 +38,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null)
         setLoading(false)
 
+        // CRITICAL: Check if this is a password reset flow BEFORE any redirects
+        // Password reset tokens appear in URL hash: #access_token=xxx&type=recovery
+        const hash = typeof window !== "undefined" ? window.location.hash : ""
+        const isPasswordResetHash = hash.includes("type=recovery") && hash.includes("access_token")
+        
+        console.log("AuthContext init - pathname:", pathname)
+        console.log("AuthContext init - hash:", hash)
+        console.log("AuthContext init - isPasswordResetHash:", isPasswordResetHash)
+        console.log("AuthContext init - session:", !!session)
+        
+        // If this is a password reset, redirect to reset form immediately
+        if (isPasswordResetHash && pathname === "/") {
+          console.log("✓ Password reset detected in auth context, redirecting to reset form")
+          router.push("/auth/reset-password")
+          return
+        }
+
         // Auto-redirect authenticated users from home/login to feed
         // BUT: Don't redirect if this is a password reset flow
         const isPasswordResetFlow = pathname.includes("/auth/reset-password") || 
-                                    pathname.includes("/auth/callback")
+                                    pathname.includes("/auth/callback") ||
+                                    isPasswordResetHash
         
         if (session && (pathname === "/" || pathname === "/login") && !isPasswordResetFlow) {
+          console.log("✓ Authenticated user on home/login, redirecting to feed")
           router.push("/feed")
         }
       } catch (error) {
@@ -62,16 +81,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null)
       setLoading(false)
 
+      console.log("AuthContext event:", event, "pathname:", window.location.pathname)
+
       // Handle auth events
       if (event === "SIGNED_IN") {
         // Don't redirect if user is on password reset flow
         const currentPath = window.location.pathname
+        const currentHash = window.location.hash
         const isPasswordResetFlow = currentPath === "/auth/reset-password" || 
-                                    currentPath === "/auth/callback"
+                                    currentPath === "/auth/callback" ||
+                                    currentHash.includes("type=recovery")
         
         if (!isPasswordResetFlow) {
+          console.log("✓ SIGNED_IN event, redirecting to feed")
           router.push("/feed")
           router.refresh()
+        } else {
+          console.log("✓ SIGNED_IN event during password reset, staying on current page")
         }
       } else if (event === "SIGNED_OUT") {
         router.push("/")

@@ -39,7 +39,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false)
 
         // Auto-redirect authenticated users from home/login to feed
-        if (session && (pathname === "/" || pathname === "/login")) {
+        // BUT: Don't redirect if this is a password reset flow
+        const isPasswordResetFlow = pathname.includes("/auth/reset-password") || 
+                                    pathname.includes("/auth/callback")
+        
+        if (session && (pathname === "/" || pathname === "/login") && !isPasswordResetFlow) {
           router.push("/feed")
         }
       } catch (error) {

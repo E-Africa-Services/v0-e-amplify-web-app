@@ -8,10 +8,19 @@ export async function GET(request: Request) {
   const type = searchParams.get("type") // Check if this is a password recovery
   const error = searchParams.get("error")
   const error_description = searchParams.get("error_description")
+  const token_hash = searchParams.get("token_hash") // Supabase recovery token
+  const redirect_type = searchParams.get("redirect_type") // Supabase may use this
 
   console.log("=== Auth Callback Debug ===")
   console.log("Full URL:", request.url)
-  console.log("Params:", { code: !!code, next, type, error })
+  console.log("Params:", { 
+    code: !!code, 
+    next, 
+    type, 
+    token_hash: !!token_hash,
+    redirect_type,
+    error 
+  })
   console.log("Origin:", origin)
 
   // Handle errors from Supabase
@@ -23,10 +32,16 @@ export async function GET(request: Request) {
   if (code) {
     const supabase = await createClient()
     
-    // Check if this is a password recovery BEFORE exchanging code
-    const isPasswordRecovery = type === "recovery"
+    // Check if this is a password recovery in multiple ways:
+    // 1. Explicit type=recovery parameter
+    // 2. token_hash present (indicates recovery flow)
+    // 3. redirect_type from Supabase
+    const isPasswordRecovery = type === "recovery" || 
+                               redirect_type === "recovery" ||
+                               !!token_hash
     
     console.log("Before exchange - isPasswordRecovery:", isPasswordRecovery)
+    console.log("Detection method:", { type, redirect_type, hasTokenHash: !!token_hash })
     
     const { error: exchangeError, data } = await supabase.auth.exchangeCodeForSession(code)
     
@@ -42,20 +57,15 @@ export async function GET(request: Request) {
         type,
         isPasswordRecovery,
         aud: user.aud,
-        recoveryMode: user.aud === "authenticated" && user.app_metadata?.provider === "email"
+        user_metadata: user.user_metadata,
+        app_metadata: user.app_metadata
       })
       
       const forwardedHost = request.headers.get("x-forwarded-host")
       const isLocalEnv = process.env.NODE_ENV === "development"
       
-      // Check multiple ways to detect password recovery
-      // 1. Explicit type=recovery parameter
-      // 2. Check if user metadata indicates recovery
-      const isRecovery = isPasswordRecovery || 
-                         user.aud === "authenticated" && !next.includes("verified")
-      
       // IMPORTANT: Redirect to reset password page FIRST for password recovery
-      if (isRecovery && type === "recovery") {
+      if (isPasswordRecovery) {
         const resetUrl = "/auth/reset-password"
         console.log("✓ Password recovery detected - redirecting to:", resetUrl)
         if (forwardedHost) {

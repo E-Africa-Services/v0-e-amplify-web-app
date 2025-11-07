@@ -29,10 +29,10 @@ Already installed:
 - [x] @supabase/ssr
 
 ## Step 4: Start Development Server
-```bash
+\`\`\`bash
 cd /home/jaaystones1/v0-e-amplify-web-app
 pnpm dev
-```
+\`\`\`
 
 ## Step 5: Test Authentication Flow
 

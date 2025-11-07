@@ -53,7 +53,7 @@ The callback route wasn't properly detecting password recovery flow vs email ver
 
 ### Key Change:
 
-```typescript
+\`\`\`typescript
 // Check if this is a password recovery flow
 const isPasswordRecovery = type === "recovery";
 
@@ -61,16 +61,16 @@ if (isPasswordRecovery) {
   // Redirect to reset password form
   return NextResponse.redirect(`${origin}/auth/reset-password`);
 }
-```
+\`\`\`
 
 ### Required Supabase Configuration:
 
 1. Go to **Authentication** → **Email Templates** → **"Reset Password"**
 2. Use template from `/emails/reset-password.html`
 3. **Critical:** The `redirectTo` URL in code includes `type=recovery`:
-   ```
+   \`\`\`
    /auth/callback?type=recovery
-   ```
+   \`\`\`
 4. Supabase will use this URL with the token
 
 ### How to Verify:
@@ -95,12 +95,12 @@ Actually already working correctly in the code.
 - **Status:** ✅ Already correct
 - **Implementation:**
 
-```typescript
+\`\`\`typescript
 if (event === "SIGNED_IN") {
   router.push("/feed");
   router.refresh();
 }
-```
+\`\`\`
 
 ### How It Works:
 

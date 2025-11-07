@@ -96,14 +96,14 @@
 ## Environment Configuration
 
 Ensure `NEXT_PUBLIC_APP_URL` is set in `.env.local`:
-```env
+\`\`\`env
 NEXT_PUBLIC_APP_URL=http://localhost:3000
-```
+\`\`\`
 
 For production, update to your production URL:
-```env
+\`\`\`env
 NEXT_PUBLIC_APP_URL=https://yourdomain.com
-```
+\`\`\`
 
 ## Notes
 

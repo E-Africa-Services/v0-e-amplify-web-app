@@ -2,9 +2,9 @@
 
 ## ❌ Previous Error
 
-```
+\`\`\`
 ERROR: 42P07: relation "idx_sessions_mentor_id" already exists
-```
+\`\`\`
 
 **Cause**: You had partially run SQL scripts from the `/scripts` folder before.
 
@@ -55,13 +55,13 @@ Click: [Open Supabase SQL Editor](https://supabase.com/dashboard/project/zwgbyaz
 
 You should see these success messages in Supabase:
 
-```
+\`\`\`
 ✅ E-Amplify database schema created successfully!
 📊 Tables created: profiles, skills, sessions, reviews, credits, credit_transactions, posts
 🔒 Row Level Security enabled on all tables
 🎁 New users will automatically receive 100 free credits
 🚀 Ready to start your development server!
-```
+\`\`\`
 
 ### Step 5: Check Table Editor
 
@@ -86,10 +86,10 @@ Verify these 7 tables exist:
 
 ### Step 6: Restart Dev Server
 
-```bash
+\`\`\`bash
 # In your terminal (Ctrl+C to stop if running)
 pnpm dev
-```
+\`\`\`
 
 Visit http://localhost:3000 - all errors should be gone!
 

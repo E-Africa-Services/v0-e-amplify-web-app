@@ -14,9 +14,9 @@ Copy the entire contents of `/supabase/schema.sql` and paste into the SQL Editor
 
 OR run this command if you have Supabase CLI:
 
-```bash
+\`\`\`bash
 supabase db push
-```
+\`\`\`
 
 ### Step 3: Verify Tables Were Created
 
@@ -42,13 +42,13 @@ The database will automatically:
 
 After running the schema, test your app:
 
-```bash
+\`\`\`bash
 # Install dependencies (if not done)
 pnpm install
 
 # Start development server
 pnpm dev
-```
+\`\`\`
 
 Then:
 

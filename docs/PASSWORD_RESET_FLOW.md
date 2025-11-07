@@ -6,7 +6,7 @@ The password reset flow is **fully implemented and functional**. Users can reset
 
 ## Flow Diagram
 
-```
+\`\`\`
 User Forgets Password
     ↓
 Click "Forgot password?" on Login Page
@@ -24,7 +24,7 @@ User clicks link in email
 Password updated in Supabase
     ↓
 Redirect to /dashboard
-```
+\`\`\`
 
 ## Implementation Details
 
@@ -97,19 +97,19 @@ Redirect to /dashboard
 
 #### `requestPasswordReset(email: string)`
 
-```typescript
+\`\`\`typescript
 // Sends password reset email via Supabase
 // Email contains link to /auth/reset-password
 // Returns { error } or { success: true }
-```
+\`\`\`
 
 #### `updatePassword(newPassword: string)`
 
-```typescript
+\`\`\`typescript
 // Updates user's password in Supabase
 // Requires valid session from reset email
 // Returns { error } or { success: true }
-```
+\`\`\`
 
 ## Configuration Requirements
 
@@ -117,11 +117,11 @@ Redirect to /dashboard
 
 Make sure these are set in your `.env` file:
 
-```env
+\`\`\`env
 NEXT_PUBLIC_APP_URL=http://localhost:3000  # or your production URL
 NEXT_PUBLIC_SUPABASE_URL=https://zwgbyazovphrgvaapysv.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-```
+\`\`\`
 
 ### Supabase Email Templates
 
@@ -137,9 +137,9 @@ Make sure the **"Reset Password"** template is configured:
 **Our custom redirect:**
 The `requestPasswordReset` function sets:
 
-```typescript
+\`\`\`typescript
 redirectTo: `${NEXT_PUBLIC_APP_URL}/auth/reset-password`;
-```
+\`\`\`
 
 ## Testing the Flow
 
@@ -147,9 +147,9 @@ redirectTo: `${NEXT_PUBLIC_APP_URL}/auth/reset-password`;
 
 1. **Start the dev server:**
 
-   ```bash
+   \`\`\`bash
    pnpm dev
-   ```
+   \`\`\`
 
 2. **Test the flow:**
    - Go to http://localhost:3000/login
@@ -269,7 +269,7 @@ To customize the reset email in Supabase:
 
 **Example custom template:**
 
-```html
+\`\`\`html
 <h2>Reset Your Password</h2>
 <p>Hi there,</p>
 <p>You recently requested to reset your password for your E-Amplify account.</p>
@@ -282,31 +282,31 @@ To customize the reset email in Supabase:
 </a>
 <p>This link will expire in 1 hour.</p>
 <p>If you didn't request this, you can safely ignore this email.</p>
-```
+\`\`\`
 
 ## API Reference
 
 ### Request Password Reset
 
-```typescript
+\`\`\`typescript
 const result = await requestPasswordReset(email);
 if (result.error) {
   // Handle error
 } else {
   // Show success message
 }
-```
+\`\`\`
 
 ### Update Password
 
-```typescript
+\`\`\`typescript
 const result = await updatePassword(newPassword);
 if (result.error) {
   // Handle error
 } else {
   // Redirect to dashboard
 }
-```
+\`\`\`
 
 ## Monitoring & Analytics
 

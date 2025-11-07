@@ -19,35 +19,35 @@ Add each of these variables one by one:
 
 #### Variable 1: NEXT_PUBLIC_SUPABASE_URL
 
-```
+\`\`\`
 Name: NEXT_PUBLIC_SUPABASE_URL
 Value: https://zwgbyazovphrgvaapysv.supabase.co
 Environment: Production, Preview, Development (check all 3)
-```
+\`\`\`
 
 #### Variable 2: NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-```
+\`\`\`
 Name: NEXT_PUBLIC_SUPABASE_ANON_KEY
 Value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3Z2J5YXpvdnBocmd2YWFweXN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyMjMzOTIsImV4cCI6MjA3Njc5OTM5Mn0.P8Jmlg8ir7_GZSkHLHjiGTHyLyMv9IgD3ME-phJwOXI
 Environment: Production, Preview, Development (check all 3)
-```
+\`\`\`
 
 #### Variable 3: SUPABASE_SERVICE_ROLE_KEY
 
-```
+\`\`\`
 Name: SUPABASE_SERVICE_ROLE_KEY
 Value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3Z2J5YXpvdnBocmd2YWFweXN2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MTIyMzM5MiwiZXhwIjoyMDc2Nzk5MzkyfQ.dMoUi1TbgBFk8J8blQ2I84Dk-wEc9kXLK0vfsvTFcGA
 Environment: Production ONLY (for security)
-```
+\`\`\`
 
 #### Variable 4: NEXT_PUBLIC_APP_URL
 
-```
+\`\`\`
 Name: NEXT_PUBLIC_APP_URL
 Value: https://v0-e-amplify-web-app-git-amplifywebapp-eafricang-9522s-projects.vercel.app
 Environment: Production, Preview, Development (check all 3)
-```
+\`\`\`
 
 **⚠️ IMPORTANT:** Do NOT include a trailing `/` at the end of the URL.
 
@@ -57,11 +57,11 @@ After adding all environment variables, you MUST redeploy:
 
 **Option A: Push a new commit** (Recommended)
 
-```bash
+\`\`\`bash
 git add .
 git commit -m "Update environment variables"
 git push
-```
+\`\`\`
 
 **Option B: Manual redeploy in Vercel**
 

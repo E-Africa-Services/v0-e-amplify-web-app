@@ -19,13 +19,13 @@ This error occurs when the middleware cannot connect to Supabase. It's usually t
 
 ### The Error Message You Saw
 
-```
+\`\`\`
 Error: fetch failed
     at context.fetch
     at _handleRequest
     at _request
     at SupabaseAuthClient._getUser
-```
+\`\`\`
 
 This is from `middleware.ts` trying to call `supabase.auth.getUser()` but the network request failed.
 
@@ -43,23 +43,23 @@ If you keep seeing this error:
 1. **Check your internet connection**
 2. **Verify Supabase is online**: Visit https://status.supabase.com
 3. **Check environment variables**:
-   ```bash
+   \`\`\`bash
    # Make sure these are set in .env
    NEXT_PUBLIC_SUPABASE_URL=https://zwgbyazovphrgvaapysv.supabase.co
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-   ```
+   \`\`\`
 4. **Restart dev server**: `pnpm dev`
 5. **Clear .next cache**:
-   ```bash
+   \`\`\`bash
    rm -rf .next
    pnpm dev
-   ```
+   \`\`\`
 
 ### Technical Details
 
 The middleware now uses this pattern:
 
-```typescript
+\`\`\`typescript
 try {
   const {
     data: { user },
@@ -70,7 +70,7 @@ try {
   console.error("Middleware auth check error:", error);
 }
 return supabaseResponse; // Always return, even on error
-```
+\`\`\`
 
 This ensures the app remains functional even when Supabase connectivity is temporarily unavailable.
 

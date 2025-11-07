@@ -27,45 +27,45 @@ The blank pages are likely caused by **incorrect redirect URLs in Supabase**. Yo
 Add these URLs to the **Redirect URLs** list:
 
 **For Production:**
-```
+\`\`\`
 https://v0-e-amplify-web-app-git-amplifywebapp-eafricang-9522s-projects.vercel.app/auth/callback
 https://v0-e-amplify-web-app-git-amplifywebapp-eafricang-9522s-projects.vercel.app/auth/reset-password
 https://v0-e-amplify-web-app-git-amplifywebapp-eafricang-9522s-projects.vercel.app/login
-```
+\`\`\`
 
 **For Local Development:**
-```
+\`\`\`
 http://localhost:3000/auth/callback
 http://localhost:3000/auth/reset-password
 http://localhost:3000/login
-```
+\`\`\`
 
 ### Step 3: Update Site URL
 
 Set your **Site URL** to:
-```
+\`\`\`
 https://v0-e-amplify-web-app-git-amplifywebapp-eafricang-9522s-projects.vercel.app
-```
+\`\`\`
 
 ### Step 4: Check Email Templates
 
 Go to **Authentication** → **Email Templates** and verify:
 
 #### Confirm Signup Template:
-```html
+\`\`\`html
 <h2>Confirm your signup</h2>
 <p>Follow this link to confirm your email:</p>
 <p><a href="{{ .ConfirmationURL }}">Confirm your email</a></p>
-```
+\`\`\`
 
 The `{{ .ConfirmationURL }}` should automatically include your redirect URL.
 
 #### Reset Password Template:
-```html
+\`\`\`html
 <h2>Reset Password</h2>
 <p>Follow this link to reset your password:</p>
 <p><a href="{{ .ConfirmationURL }}">Reset Password</a></p>
-```
+\`\`\`
 
 ### Step 5: Test the Flow
 

@@ -24,9 +24,9 @@ Make sure the **"Confirm signup"** template is set and uses this redirect URL pa
 
 **Confirmation URL:** Should redirect to:
 
-```
+\`\`\`
 {{ .SiteURL }}/auth/callback?code={{ .Token }}&next=/login?verified=true
-```
+\`\`\`
 
 The `{{ .ConfirmationURL }}` variable in the template will automatically handle this.
 
@@ -48,9 +48,9 @@ Use the HTML template in `/emails/reset-password.html`
 
 **Confirmation URL:** Should redirect to:
 
-```
+\`\`\`
 {{ .SiteURL }}/auth/callback?type=recovery&code={{ .Token }}
-```
+\`\`\`
 
 **CRITICAL:** The URL **must include** `type=recovery` parameter so the callback knows it's a password reset, not email verification.
 
@@ -85,27 +85,27 @@ Add these **Redirect URLs**:
 
 **Production:**
 
-```
+\`\`\`
 https://v0-e-amplify-web-app-git-amplifywebapp-eafricang-9522s-projects.vercel.app/auth/callback
 https://v0-e-amplify-web-app-git-amplifywebapp-eafricang-9522s-projects.vercel.app/auth/reset-password
 https://v0-e-amplify-web-app-git-amplifywebapp-eafricang-9522s-projects.vercel.app/login
 https://v0-e-amplify-web-app-git-amplifywebapp-eafricang-9522s-projects.vercel.app/feed
-```
+\`\`\`
 
 **Local Development:**
 
-```
+\`\`\`
 http://localhost:3000/auth/callback
 http://localhost:3000/auth/reset-password
 http://localhost:3000/login
 http://localhost:3000/feed
-```
+\`\`\`
 
 **Site URL:**
 
-```
+\`\`\`
 https://v0-e-amplify-web-app-git-amplifywebapp-eafricang-9522s-projects.vercel.app
-```
+\`\`\`
 
 ### 2. Email Templates
 

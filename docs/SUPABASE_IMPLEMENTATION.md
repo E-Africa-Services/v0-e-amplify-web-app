@@ -149,16 +149,16 @@ Server actions for fetching dashboard data:
 
 ### Step 2: Install Dependencies
 
-```bash
+\`\`\`bash
 cd /home/jaaystones1/v0-e-amplify-web-app
 pnpm install
-```
+\`\`\`
 
 ### Step 3: Start the Development Server
 
-```bash
+\`\`\`bash
 pnpm dev
-```
+\`\`\`
 
 The app will be available at `http://localhost:3000`
 
@@ -242,10 +242,10 @@ The app will be available at `http://localhost:3000`
 
 Make sure these are set in your `.env` file:
 
-```env
+\`\`\`env
 NEXT_PUBLIC_SUPABASE_URL=https://zwgbyazovphrgvaapysv.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
+\`\`\`
 
 ## 🧪 Testing the Implementation
 

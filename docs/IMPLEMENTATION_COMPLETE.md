@@ -82,16 +82,16 @@ All requirements have been successfully implemented:
 
 ### 1. Run SQL Schema
 
-```bash
+\`\`\`bash
 # Go to Supabase Dashboard → SQL Editor
 # Copy contents of /supabase/schema.sql and run it
-```
+\`\`\`
 
 ### 2. Start Development Server
 
-```bash
+\`\`\`bash
 pnpm dev
-```
+\`\`\`
 
 ### 3. Test the Flow
 
@@ -122,7 +122,7 @@ pnpm dev
 
 ## 📊 Data Flow
 
-```
+\`\`\`
 User Signs Up (Onboarding)
     ↓
 Supabase Auth creates user
@@ -140,7 +140,7 @@ Auto-redirect to Dashboard
 Dashboard fetches profile with user_id
     ↓
 Displays personalized content
-```
+\`\`\`
 
 ## 🧪 Testing Checklist
 

@@ -4,9 +4,9 @@
 
 When you ran the SQL script, you got:
 
-```
+\`\`\`
 ERROR: 42P07: relation "idx_sessions_mentor_id" already exists
-```
+\`\`\`
 
 ## 🔍 Root Cause
 
@@ -25,7 +25,7 @@ Completely rewrote `/supabase/URGENT_RUN_THIS_FIRST.sql` to:
 
 ### Phase 1: Comprehensive Cleanup
 
-```sql
+\`\`\`sql
 -- Drop ALL old objects from /scripts folder
 DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS mentorship_sessions CASCADE;
@@ -34,11 +34,11 @@ DROP TABLE IF EXISTS activity_logs CASCADE;
 DROP TYPE IF EXISTS user_role CASCADE;
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 -- ... and many more
-```
+\`\`\`
 
 ### Phase 2: Safe Creation
 
-```sql
+\`\`\`sql
 -- Use CREATE INDEX IF NOT EXISTS (won't error)
 CREATE INDEX IF NOT EXISTS idx_sessions_mentor_id ON sessions(mentor_id);
 
@@ -46,15 +46,15 @@ CREATE INDEX IF NOT EXISTS idx_sessions_mentor_id ON sessions(mentor_id);
 CREATE TRIGGER set_updated_at_sessions  -- was just "set_updated_at"
 CREATE TRIGGER set_updated_at_credits   -- unique names
 CREATE TRIGGER set_updated_at_posts
-```
+\`\`\`
 
 ### Phase 3: Success Feedback
 
-```sql
+\`\`\`sql
 -- Clear success messages
 RAISE NOTICE '✅ E-Amplify database schema created successfully!';
 RAISE NOTICE '📊 Tables created: profiles, skills, sessions, reviews...';
-```
+\`\`\`
 
 ## 📊 Schema Comparison
 

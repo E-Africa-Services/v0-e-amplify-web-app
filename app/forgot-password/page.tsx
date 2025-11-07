@@ -9,12 +9,14 @@ import { Card } from "@/components/ui/card"
 import Link from "next/link"
 import { ArrowLeft, Mail, CheckCircle } from "lucide-react"
 import { requestPasswordReset } from "@/lib/auth-actions"
+import { useRouter } from "next/navigation"
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -29,6 +31,10 @@ export default function ForgotPasswordPage() {
     } else {
       setSuccess(true)
       setIsLoading(false)
+
+      setTimeout(() => {
+        router.push("/auth/reset-password")
+      }, 3000)
     }
   }
 
@@ -101,14 +107,11 @@ export default function ForgotPasswordPage() {
                 We've sent a password reset link to <strong className="text-foreground">{email}</strong>
               </p>
               <p className="text-sm text-muted-foreground mb-6">
-                Click the link in the email to reset your password. The link will expire in 1 hour.
+                Redirecting to password reset page... or{" "}
+                <button onClick={() => router.push("/auth/reset-password")} className="underline text-primary">
+                  click here
+                </button>
               </p>
-              <Link href="/login">
-                <Button variant="outline" className="rounded-full bg-transparent">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back to login
-                </Button>
-              </Link>
             </div>
           )}
         </Card>

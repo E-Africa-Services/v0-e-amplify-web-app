@@ -3,23 +3,24 @@
 import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Heart, MessageSquare, TrendingUp, MoreHorizontal } from "lucide-react"
+import { Heart, MessageSquare, TrendingUp, MoreHorizontal } from 'lucide-react'
+import Link from "next/link"
 
 interface Post {
   id: string
   author: {
+    id: string
     name: string
-    avatar: string
+    avatar_url: string
     role: string
-    skills: string[]
   }
   content: string
   timestamp: string
+  commentCount: number
   reactions: {
     heart: number
     amplify: number
   }
-  comments: number
   hasReacted: boolean
 }
 
@@ -27,7 +28,7 @@ export function FeedPost({ post }: { post: Post }) {
   const [hasReacted, setHasReacted] = useState(post.hasReacted)
   const [reactions, setReactions] = useState(post.reactions)
 
-  const handleReact = () => {
+  const handleReact = async () => {
     setHasReacted(!hasReacted)
     setReactions({
       ...reactions,
@@ -35,36 +36,21 @@ export function FeedPost({ post }: { post: Post }) {
     })
   }
 
-  const handleAmplify = () => {
-    // In real app, boost the post
-    setReactions({
-      ...reactions,
-      amplify: reactions.amplify + 1,
-    })
-  }
-
   return (
     <Card className="p-6 hover:shadow-md transition-shadow">
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
-        <div className="flex gap-3">
+        <Link href={`/profile/${post.author.id}`} className="flex gap-3 hover:opacity-80">
           <img
-            src={post.author.avatar || "/placeholder.svg"}
+            src={post.author.avatar_url || "/placeholder.svg"}
             alt={post.author.name}
             className="w-12 h-12 rounded-full object-cover"
           />
           <div>
-            <h3 className="font-semibold">{post.author.name}</h3>
+            <h3 className="font-semibold hover:underline">{post.author.name}</h3>
             <p className="text-sm text-muted-foreground">{post.author.role}</p>
-            <div className="flex flex-wrap gap-1 mt-1">
-              {post.author.skills.slice(0, 3).map((skill, i) => (
-                <span key={i} className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                  {skill}
-                </span>
-              ))}
-            </div>
           </div>
-        </div>
+        </Link>
 
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">{post.timestamp}</span>
@@ -91,10 +77,10 @@ export function FeedPost({ post }: { post: Post }) {
 
         <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
           <MessageSquare className="w-4 h-4" />
-          <span className="text-sm">{post.comments}</span>
+          <span className="text-sm">{post.commentCount}</span>
         </Button>
 
-        <Button variant="ghost" size="sm" onClick={handleAmplify} className="gap-2 text-muted-foreground">
+        <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
           <TrendingUp className="w-4 h-4" />
           <span className="text-sm">Amplify {reactions.amplify > 0 && `(${reactions.amplify})`}</span>
         </Button>

@@ -26,6 +26,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const supabase = createClient()
 
+  // Helper function to check for recovery tokens in URL hash
+  const hasRecoveryTokens = () => {
+    if (typeof window === "undefined") return false
+    const hash = window.location.hash
+    return hash.includes("access_token") && hash.includes("type=recovery")
+  }
+
   useEffect(() => {
     // Get initial session
     const initializeAuth = async () => {
@@ -38,14 +45,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null)
         setLoading(false)
 
-        const hash = typeof window !== "undefined" ? window.location.hash : ""
-        const hasRecoveryTokens = hash.includes("access_token") && hash.includes("type=recovery")
-
-        console.log("AuthContext init - pathname:", pathname)
-        console.log("AuthContext init - has recovery tokens:", hasRecoveryTokens)
-
-        if (hasRecoveryTokens) {
-          console.log("✓ Recovery tokens detected - staying on current page for reset password to handle")
+        if (hasRecoveryTokens()) {
+          console.log("✓ Recovery tokens detected - staying on current page")
           return
         }
 
@@ -72,20 +73,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       console.log("AuthContext event:", event)
 
+      if (hasRecoveryTokens()) {
+        console.log("✓ Recovery tokens present - preventing redirect")
+        return
+      }
+
       // Handle auth events
       if (event === "SIGNED_IN") {
         const currentPath = window.location.pathname
-        const currentHash = window.location.hash
-        const hasRecoveryTokens = currentHash.includes("access_token") && currentHash.includes("type=recovery")
-        const isPasswordResetFlow =
-          currentPath === "/auth/reset-password" || currentPath === "/auth/callback" || hasRecoveryTokens
+        const isPasswordResetPath = currentPath === "/auth/reset-password" || currentPath === "/auth/callback"
 
-        if (!isPasswordResetFlow) {
+        if (!isPasswordResetPath) {
           console.log("✓ SIGNED_IN, redirecting to feed")
           router.push("/feed")
           router.refresh()
         } else {
-          console.log("✓ SIGNED_IN during password reset, staying on current page")
+          console.log("✓ SIGNED_IN on auth page, staying on current page")
         }
       } else if (event === "SIGNED_OUT") {
         router.push("/")

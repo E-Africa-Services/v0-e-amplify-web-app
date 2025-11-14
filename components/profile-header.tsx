@@ -1,7 +1,12 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
-import { Video, MessageSquare, Star, MapPin, Calendar } from "lucide-react"
+import { Video, MessageSquare, Star, MapPin, Calendar, UserPlus, UserCheck } from 'lucide-react'
+import { useState } from "react"
+import { followUser, unfollowUser } from "@/lib/follow-actions"
 
 interface Profile {
+  id: string
   name: string
   role?: string | null
   avatar_url?: string | null
@@ -14,6 +19,8 @@ interface Profile {
   pricing?: {
     perSession: number
   }
+  isCurrentUser?: boolean
+  isFollowing?: boolean
 }
 
 export function ProfileHeader({ profile }: { profile: Profile }) {
@@ -29,6 +36,28 @@ export function ProfileHeader({ profile }: { profile: Profile }) {
     }
   })()
 
+  const [isFollowing, setIsFollowing] = useState(profile.isFollowing || false)
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleFollowToggle = async () => {
+    setIsLoading(true)
+    try {
+      if (isFollowing) {
+        const result = await unfollowUser(profile.id)
+        if (!result.error) {
+          setIsFollowing(false)
+        }
+      } else {
+        const result = await followUser(profile.id)
+        if (!result.error) {
+          setIsFollowing(true)
+        }
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div className="relative">
       {/* Cover Image */}
@@ -43,7 +72,7 @@ export function ProfileHeader({ profile }: { profile: Profile }) {
             <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-3xl border-4 border-background shadow-xl bg-primary/20 flex items-center justify-center text-4xl font-bold text-primary">
               {profile.avatar_url ? (
                 <img
-                  src={profile.avatar_url}
+                  src={profile.avatar_url || "/placeholder.svg"}
                   alt={profile.name}
                   className="w-full h-full rounded-3xl object-cover"
                 />
@@ -84,10 +113,33 @@ export function ProfileHeader({ profile }: { profile: Profile }) {
 
                 {/* Actions */}
                 <div className="flex gap-3">
-                  <Button variant="outline" size="lg" className="rounded-full bg-transparent">
-                    <MessageSquare className="w-4 h-4 mr-2" />
-                    Message
-                  </Button>
+                  {!profile.isCurrentUser && (
+                    <>
+                      <Button variant="outline" size="lg" className="rounded-full bg-transparent">
+                        <MessageSquare className="w-4 h-4 mr-2" />
+                        Message
+                      </Button>
+                      <Button 
+                        size="lg" 
+                        className="rounded-full"
+                        onClick={handleFollowToggle}
+                        disabled={isLoading}
+                        variant={isFollowing ? "outline" : "default"}
+                      >
+                        {isFollowing ? (
+                          <>
+                            <UserCheck className="w-4 h-4 mr-2" />
+                            Following
+                          </>
+                        ) : (
+                          <>
+                            <UserPlus className="w-4 h-4 mr-2" />
+                            Follow
+                          </>
+                        )}
+                      </Button>
+                    </>
+                  )}
                   <Button size="lg" className="rounded-full">
                     <Video className="w-4 h-4 mr-2" />
                     {profile.pricing?.perSession 

@@ -53,25 +53,38 @@ export async function getFeedPosts(limit = 20, offset = 0) {
         created_at,
         updated_at,
         author_id,
-        profiles:author_id(id, name, avatar_url, role),
-        post_comments(id),
-        post_reactions:post_comments(author_id)
+        profiles!posts_author_id_fkey(id, name, avatar_url, role)
       `
       )
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1)
 
     if (error) {
-      return { error: error.message }
+      throw new Error(error.message)
     }
 
+    // Fetch comments count for each post separately to avoid relationship issues
+    const postsWithComments = await Promise.all(
+      posts.map(async (post: any) => {
+        const { count } = await supabase
+          .from("post_comments")
+          .select("*", { count: "exact", head: true })
+          .eq("post_id", post.id)
+
+        return {
+          ...post,
+          commentCount: count || 0,
+        }
+      })
+    )
+
     // Transform data for frontend
-    const transformedPosts = posts.map((post: any) => ({
+    const transformedPosts = postsWithComments.map((post: any) => ({
       id: post.id,
       content: post.content,
       timestamp: new Date(post.created_at).toLocaleDateString(),
       author: post.profiles,
-      commentCount: post.post_comments?.length || 0,
+      commentCount: post.commentCount,
       reactions: {
         heart: 0,
         amplify: 0,
